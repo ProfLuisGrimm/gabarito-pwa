@@ -22,7 +22,6 @@
   .underline { border-bottom: 1px solid #000; display: inline-block; margin-left:3px; }
   .underline.double { width: 200px; } /* Nome */
   .underline.standard { width: 50px; } /* Nº, Turma */
-  .underline.date { width: 80px; } /* Data */
   @media print {
     body * { visibility: hidden; }
     #sheetContainer, #sheetContainer * { visibility: visible; }
@@ -68,7 +67,6 @@
       <span id="bubbleSizeValue">20</span>
     </label>
 
-    <button onclick="updateSheet()">Atualizar Gabarito</button>
     <button onclick="printSheet()">Imprimir Cartão</button>
   </div>
 </div>
@@ -92,8 +90,8 @@
       </select>
     </label>
 
-    <label>Data:
-      <input type="date" id="examDate" value="">
+    <label>Nº do aluno:
+      <input type="text" id="studentNumber" readonly>
     </label>
 
     <button onclick="exportResults()">Exportar Excel</button>
@@ -104,8 +102,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let classes = {};
-let studentsData = {}; // estrutura: {turma: [{numero,nome}, ...]}
+let studentsData = {}; // {turma: [{numero,nome}, ...]}
 let results = [];
 
 // Alterna telas
@@ -176,7 +173,7 @@ bubbleSlider.addEventListener('input', function(){
   updateSheet();
 });
 
-// Atualiza gabarito de visualização
+// Atualiza gabarito
 function updateSheet() {
   const numQuestions = parseInt(document.getElementById('numQuestions').value);
   const numOptions = parseInt(document.getElementById('numOptions').value);
@@ -195,7 +192,6 @@ function updateSheet() {
     const aluno = document.getElementById('selectStudent').value;
     const numero = document.getElementById('studentNumber').value;
     const turma = document.getElementById('selectClass').value;
-    const data = document.getElementById('examDate').value;
 
     const header = document.createElement('div');
     header.className = 'headerCard';
@@ -206,7 +202,6 @@ function updateSheet() {
       </div>
       <div style="margin-top:5px;">
         Turma: <span class="underline standard">${turma || '____'}</span>
-        &nbsp;&nbsp; Data: <span class="underline date">${data || '___/___/___'}</span>
       </div>
     `;
     page.appendChild(header);
@@ -228,7 +223,6 @@ function updateSheet() {
 
 // Imprimir cartões
 function printSheet() {
-  updateSheet();
   window.print();
 }
 
