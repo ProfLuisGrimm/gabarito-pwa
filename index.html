@@ -197,11 +197,11 @@ function updateSheet() {
     header.className = 'headerCard';
     header.innerHTML = `
       <div>
-        Nome: <span class="underline double">${aluno || '______________________'}</span>
+        Nome: ${aluno || '____________________________'}
         &nbsp;&nbsp; Nº: <span class="underline standard">${numero || '____'}</span>
       </div>
       <div style="margin-top:5px;">
-        Turma: <span class="underline standard">${turma || '____'}</span>
+        Turma: <span class="underline standard">${turma || '______'}</span>
       </div>
     `;
     page.appendChild(header);
