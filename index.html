@@ -17,9 +17,15 @@
     padding:10px 15px; background-color:#e74c3c; color:#fff; 
     font-weight:bold; border:none; border-radius:5px; cursor:pointer; 
   }
+  .headerCard span { display:inline-block; }
+  .underline { border-bottom: 1px solid #000; display: inline-block; margin-left:3px; }
+  .underline.double { width: 200px; } /* Nome */
+  .underline.standard { width: 50px; } /* Nº, Turma */
+  .underline.date { width: 80px; } /* Data */
   @media print {
-    body { margin: 0; }
-    .page { page-break-inside: avoid; float: left; }
+    body * { visibility: hidden; }
+    #sheetContainer, #sheetContainer * { visibility: visible; }
+    #sheetContainer { position: absolute; left:0; top:0; width:100%; }
   }
 </style>
 </head>
@@ -98,20 +104,19 @@
 
 <div id="sheetContainer"></div>
 
-<!-- Biblioteca SheetJS para ler Excel -->
+<!-- Biblioteca SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-let classes = {}; // armazenar dados das turmas
-let results = []; // resultados por aluno
+let classes = {};
+let results = [];
 
-// Alterna telas
 function showScreen(screen){
   document.getElementById('gabaritoScreen').style.display = (screen==='gabarito')?'block':'none';
   document.getElementById('escaneamentoScreen').style.display = (screen==='escaneamento')?'block':'none';
 }
 
-// Upload de arquivos Excel
+// Upload Excel
 document.getElementById('fileInput').addEventListener('change', function(e){
   const files = e.target.files;
   for(let f of files){
@@ -155,7 +160,7 @@ document.getElementById('selectClass').addEventListener('change', function(){
   }
 });
 
-// Slider tamanho das bolhas
+// Slider bolhas
 const bubbleSlider = document.getElementById('bubbleSize');
 const bubbleValue = document.getElementById('bubbleSizeValue');
 bubbleSlider.addEventListener('input', function(){
@@ -166,7 +171,7 @@ bubbleSlider.addEventListener('input', function(){
   });
 });
 
-// Impressão dos cartões
+// Imprimir cartões
 function printSheet() {
   const numQuestions = parseInt(document.getElementById('numQuestions').value);
   const numOptions = parseInt(document.getElementById('numOptions').value);
@@ -184,13 +189,23 @@ function printSheet() {
     else if(perPage === 4){ page.style.width = '48%'; page.style.height = '48%'; }
     else{ page.style.width = '95%'; page.style.height = '95%'; }
 
-    // Cabeçalho personalizável
+    // Cabeçalho com linhas para preenchimento
     const header = document.createElement('div');
-    const turma = document.getElementById('selectClass').value;
     const aluno = document.getElementById('selectStudent').value;
     const numero = document.getElementById('studentNumber').value;
+    const turma = document.getElementById('selectClass').value;
     const data = document.getElementById('examDate').value;
-    header.innerHTML = `<strong>Aluno: ${aluno || ''} | Nº: ${numero || ''} | Turma: ${turma || ''} | Data: ${data || ''}</strong>`;
+    header.className = 'headerCard';
+    header.innerHTML = `
+      <div>
+        Nome: <span class="underline double">${aluno || '______________________'}</span>
+        &nbsp;&nbsp; Nº: <span class="underline standard">${numero || '____'}</span>
+      </div>
+      <div style="margin-top:5px;">
+        Turma: <span class="underline standard">${turma || '____'}</span>
+        &nbsp;&nbsp; Data: <span class="underline date">${data || '___/___/___'}</span>
+      </div>
+    `;
     page.appendChild(header);
 
     // Questões
@@ -212,7 +227,7 @@ function printSheet() {
   window.print();
 }
 
-// Exportar Excel (simulação, resultados podem ser preenchidos futuramente pelo escaneamento)
+// Exportar Excel
 function exportResults() {
   if(results.length===0){
     alert("Nenhum resultado registrado ainda.");
