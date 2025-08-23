@@ -1,123 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Gabarito Scanner (Protótipo)</title>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#111111">
-  <style>
-    :root { --bg:#0f172a; --panel:#111827; --muted:#9ca3af; --accent:#22c55e; --danger:#ef4444; --text:#f9fafb; }
-    *{ box-sizing:border-box; }
-    body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--text); }
-    header{ position:sticky; top:0; z-index:2; backdrop-filter:saturate(1.2) blur(6px); background:rgba(15,23,42,.7); border-bottom:1px solid #1f2937; }
-    header .wrap{ max-width:960px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px; }
-    header h1{ font-size:18px; margin:0; }
-    .badge{ font-size:12px; color:#111827; background:#a7f3d0; padding:2px 8px; border-radius:999px; }
-    main{ max-width:960px; margin:0 auto; padding:16px; display:grid; gap:16px; }
-    .card{ background:var(--panel); border:1px solid #1f2937; border-radius:16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-    .card .content{ padding:16px; }
-    h2{ font-size:16px; margin:0 0 8px; }
-    p,li,label{ color:var(--muted); line-height:1.5; }
-    .grid{ display:grid; gap:12px; }
-    .grid.cols-2{ grid-template-columns: 1fr 1fr; }
-    .grid.cols-3{ grid-template-columns: 1fr 1fr 1fr; }
-    .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    input, select, button, textarea{ font-size:16px; }
-    input[type="number"], input[type="text"]{ width:100%; background:#0b1220; color:var(--text); border:1px solid #334155; border-radius:12px; padding:10px 12px; }
-    input[type="range"]{ width:100%; }
-    textarea{ width:100%; min-height:72px; background:#0b1220; color:var(--text); border:1px solid #334155; border-radius:12px; padding:10px 12px; }
-    button{ background:#1f2937; color:var(--text); border:1px solid #334155; padding:10px 14px; border-radius:12px; cursor:pointer; }
-    button.primary{ background:var(--accent); border-color:#16a34a; color:#052e16; font-weight:700; }
-    button.danger{ background:var(--danger); border-color:#b91c1c; color:white; }
-    button:disabled{ opacity:.6; cursor:not-allowed; }
-    video, canvas{ width:100%; border-radius:12px; background:#000; }
-    .results{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; background:#0b1220; border:1px solid #334155; border-radius:12px; padding:10px 12px; white-space:pre-wrap; overflow:auto; }
-    .hint{ font-size:12px; color:#cbd5e1; }
-    .success{ color:#86efac; }
-    .warn{ color:#fde68a; }
-    .fail{ color:#fca5a5; }
-    .pill{ padding:2px 8px; border-radius:999px; border:1px solid #334155; }
-    .muted{ color:#9ca3af; }
-    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; background:#111827; border:1px solid #334155; border-radius:6px; padding:2px 6px; }
-    .footer{ text-align:center; font-size:12px; color:#9ca3af; padding:16px; }
-    .print{ background:white; color:black; padding:24px; }
-    .sheet-grid{ width:100%; border-collapse:collapse; }
-    .sheet-grid td, .sheet-grid th{ border:1px solid #000; padding:6px 8px; text-align:center; }
-    .corners{ display:flex; justify-content:space-between; }
-    .corner{ width:24mm; height:24mm; background:black; }
-    @media (min-width: 900px) { .grid.responsive{ grid-template-columns: 1.1fr 0.9fr; } }
-  </style>
-  <!-- OpenCV.js (carregado do CDN; precisa de internet na 1ª vez) -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gabarito Digital</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .controls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .controls label { display: flex; flex-direction: column; font-size: 14px; }
+  .page { border: 1px solid #000; margin: 5px; padding: 10px; box-sizing: border-box; }
+  .question { margin-bottom: 5px; font-size: 12px; }
+  @media print {
+    body { margin: 0; }
+    .page { page-break-inside: avoid; float: left; }
+  }
+</style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <h1>Gabarito Scanner</h1>
-      <span class="badge">Protótipo</span>
-      <span class="muted">— aponte a câmera e corrija em segundos</span>
-    </div>
-  </header>
 
-  <main class="grid responsive">
-    <section class="card">
-      <div class="content grid">
-        <h2>1) Câmera & Parâmetros</h2>
-        <div class="row">
-          <button id="btnStart">Ativar câmera</button>
-          <button id="btnScan" class="primary" disabled>Escanear agora</button>
-          <button id="btnCSV" disabled>Exportar CSV</button>
-        </div>
-        <div class="grid cols-3">
-          <label>Questões:
-            <input id="numQuestions" type="number" min="1" max="200" value="20">
-          </label>
-          <label>Alternativas por questão:
-            <select id="numChoices">
-              <option>4</option>
-              <option>5</option>
-            </select>
-          </label>
-          <label>Threshold (sensibilidade):
-            <input id="threshold" type="range" min="0.1" max="0.9" step="0.05" value="0.5">
-          </label>
-        </div>
-        <div class="grid cols-2">
-          <label>Gabarito oficial (A,B,C,D...):
-            <input id="answerKey" type="text" placeholder="Ex: A,B,C,D,A,..." />
-            <div class="hint">Use vírgulas. Ex.: <span class="kbd">A,B,C,D,A,B,...</span></div>
-          </label>
-          <label>ID/Nome do aluno (opcional):
-            <input id="studentId" type="text" placeholder="Ex: 8ºB - Maria S." />
-            <div class="hint">Será incluído no CSV.</div>
-          </label>
-        </div>
-        <div class="row">
-          <button id="btnSaveKey">Salvar gabarito</button>
-          <span class="hint">Dica: o gabarito fica salvo no seu aparelho (localStorage).</span>
-        </div>
-        <video id="video" playsinline></video>
-        <canvas id="canvas" style="display:none;"></canvas>
-      </div>
-    </section>
+<div class="controls">
+  <label>Quantidade de questões:
+    <input type="number" id="numQuestions" value="10" min="1" max="50">
+  </label>
+  <label>Alternativas:
+    <select id="numOptions">
+      <option value="4" selected>4 (A-D)</option>
+      <option value="5">5 (A-E)</option>
+    </select>
+  </label>
+  <label>Gabaritos por folha:
+    <select id="perPage">
+      <option value="1" selected>1</option>
+      <option value="2">2</option>
+      <option value="4">4</option>
+    </select>
+  </label>
+  <label>Tamanho das bolhas:
+    <input type="range" id="bubbleSize" min="10" max="30" value="20">
+  </label>
+  <button onclick="printSheet()">Imprimir Cartão</button>
+</div>
 
-    <section class="card">
-      <div class="content grid">
-        <h2>2) Resultados</h2>
-        <div id="status" class="hint">Pronto para iniciar.</div>
-        <pre id="results" class="results">Nenhuma leitura ainda.</pre>
-        <div class="row">
-          <button id="btnPrintSheet">Imprimir Cartão-Resposta</button>
-          <button id="btnHelp">Ajuda rápida</button>
-        </div>
-      </div>
-    </section>
-  </main>
+<div id="sheetContainer"></div>
 
-  <div class="footer">Feito para professores – Protótipo educativo (OpenCV.js).</div>
+<script>
+function printSheet() {
+  const numQuestions = parseInt(document.getElementById('numQuestions').value);
+  const numOptions = parseInt(document.getElementById('numOptions').value);
+  const perPage = parseInt(document.getElementById('perPage').value);
+  const bubbleSize = parseInt(document.getElementById('bubbleSize').value);
 
-  <script src="main.js"></script>
+  const container = document.getElementById('sheetContainer');
+  container.innerHTML = '';
+
+  for(let i=0;i<perPage;i++){
+    const page = document.createElement('div');
+    page.className = 'page';
+    
+    // Ajuste de tamanho para caber múltiplos cartões
+    if(perPage === 2){
+      page.style.width = '48%';
+      page.style.height = '95%';
+    } else if(perPage === 4){
+      page.style.width = '48%';
+      page.style.height = '48%';
+    } else {
+      page.style.width = '95%';
+      page.style.height = '95%';
+    }
+
+    // Cabeçalho
+    const header = document.createElement('div');
+    header.innerHTML = '<strong>Nome: ____________________</strong>';
+    page.appendChild(header);
+
+    // Questões
+    for(let q=1;q<=numQuestions;q++){
+      const qDiv = document.createElement('div');
+      qDiv.className = 'question';
+      let optionsHtml = '';
+      for(let o=0;o<numOptions;o++){
+        const letter = String.fromCharCode(65+o);
+        optionsHtml += `<label style="font-size:${bubbleSize}px"><input type="radio" name="q${q}_${i}" value="${letter}"> ${letter} </label>`;
+      }
+      qDiv.innerHTML = `${q}. ${optionsHtml}`;
+      page.appendChild(qDiv);
+    }
+
+    container.appendChild(page);
+  }
+
+  window.print();
+}
+</script>
+
 </body>
 </html>
