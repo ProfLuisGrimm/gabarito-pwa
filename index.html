@@ -10,6 +10,7 @@
   .controls label { display: flex; flex-direction: column; font-size: 14px; }
   .page { border: 1px solid #000; margin: 5px; padding: 10px; box-sizing: border-box; }
   .question { margin-bottom: 5px; font-size: 12px; }
+  #exitBtn { position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 5px 10px; }
   @media print {
     body { margin: 0; }
     .page { page-break-inside: avoid; float: left; }
@@ -18,81 +19,14 @@
 </head>
 <body>
 
+<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair</button>
+
 <div class="controls">
-  <label>Quantidade de questões:
-    <input type="number" id="numQuestions" value="10" min="1" max="50">
+  <label>Upload das turmas (Excel .xlsx ou .csv):
+    <input type="file" id="fileInput" multiple>
   </label>
-  <label>Alternativas:
-    <select id="numOptions">
-      <option value="4" selected>4 (A-D)</option>
-      <option value="5">5 (A-E)</option>
-    </select>
-  </label>
-  <label>Gabaritos por folha:
-    <select id="perPage">
-      <option value="1" selected>1</option>
-      <option value="2">2</option>
-      <option value="4">4</option>
-    </select>
-  </label>
-  <label>Tamanho das bolhas:
-    <input type="range" id="bubbleSize" min="10" max="30" value="20">
-  </label>
-  <button onclick="printSheet()">Imprimir Cartão</button>
-</div>
 
-<div id="sheetContainer"></div>
-
-<script>
-function printSheet() {
-  const numQuestions = parseInt(document.getElementById('numQuestions').value);
-  const numOptions = parseInt(document.getElementById('numOptions').value);
-  const perPage = parseInt(document.getElementById('perPage').value);
-  const bubbleSize = parseInt(document.getElementById('bubbleSize').value);
-
-  const container = document.getElementById('sheetContainer');
-  container.innerHTML = '';
-
-  for(let i=0;i<perPage;i++){
-    const page = document.createElement('div');
-    page.className = 'page';
-    
-    // Ajuste de tamanho para caber múltiplos cartões
-    if(perPage === 2){
-      page.style.width = '48%';
-      page.style.height = '95%';
-    } else if(perPage === 4){
-      page.style.width = '48%';
-      page.style.height = '48%';
-    } else {
-      page.style.width = '95%';
-      page.style.height = '95%';
-    }
-
-    // Cabeçalho
-    const header = document.createElement('div');
-    header.innerHTML = '<strong>Nome: ____________________</strong>';
-    page.appendChild(header);
-
-    // Questões
-    for(let q=1;q<=numQuestions;q++){
-      const qDiv = document.createElement('div');
-      qDiv.className = 'question';
-      let optionsHtml = '';
-      for(let o=0;o<numOptions;o++){
-        const letter = String.fromCharCode(65+o);
-        optionsHtml += `<label style="font-size:${bubbleSize}px"><input type="radio" name="q${q}_${i}" value="${letter}"> ${letter} </label>`;
-      }
-      qDiv.innerHTML = `${q}. ${optionsHtml}`;
-      page.appendChild(qDiv);
-    }
-
-    container.appendChild(page);
-  }
-
-  window.print();
-}
-</script>
-
-</body>
-</html>
+  <label>Selecione a turma:
+    <select id="selectClass">
+      <option value="">-- Selecione --</option>
+    </se
