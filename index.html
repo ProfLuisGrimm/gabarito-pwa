@@ -6,11 +6,17 @@
 <title>Gabarito Digital</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
+  .menu { margin-bottom: 15px; }
+  .menu button { margin-right: 10px; padding: 8px 12px; font-weight:bold; cursor:pointer; }
   .controls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .controls label { display: flex; flex-direction: column; font-size: 14px; }
   .page { border: 1px solid #000; margin: 5px; padding: 10px; box-sizing: border-box; }
   .question { margin-bottom: 5px; font-size: 12px; }
-  #exitBtn { position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 5px 10px; }
+  #exitBtn { 
+    position: fixed; top:10px; right:10px; z-index:1000; 
+    padding:10px 15px; background-color:#e74c3c; color:#fff; 
+    font-weight:bold; border:none; border-radius:5px; cursor:pointer; 
+  }
   @media print {
     body { margin: 0; }
     .page { page-break-inside: avoid; float: left; }
@@ -19,50 +25,75 @@
 </head>
 <body>
 
-<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair</button>
+<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">
+  🚪 Sair do app (fechar manualmente no iPhone)
+</button>
 
-<div class="controls">
-  <label>Upload das turmas (Excel .xlsx ou .csv):
-    <input type="file" id="fileInput" multiple>
-  </label>
+<div class="menu">
+  <button onclick="showScreen('gabarito')">Configurar Gabarito</button>
+  <button onclick="showScreen('escaneamento')">Escanear Cartão</button>
+</div>
 
-  <label>Selecione a turma:
-    <select id="selectClass">
-      <option value="">-- Selecione --</option>
-    </select>
-  </label>
+<!-- Tela Configuração Gabarito -->
+<div id="gabaritoScreen">
+  <div class="controls">
+    <label>Quantidade de questões:
+      <input type="number" id="numQuestions" value="10" min="1" max="50">
+    </label>
 
-  <label>Selecione o aluno:
-    <select id="selectStudent">
-      <option value="">-- Selecione --</option>
-    </select>
-  </label>
+    <label>Alternativas:
+      <select id="numOptions">
+        <option value="4" selected>4 (A-D)</option>
+        <option value="5">5 (A-E)</option>
+      </select>
+    </label>
 
-  <label>Quantidade de questões:
-    <input type="number" id="numQuestions" value="10" min="1" max="50">
-  </label>
+    <label>Gabaritos por folha:
+      <select id="perPage">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="4">4</option>
+      </select>
+    </label>
 
-  <label>Alternativas:
-    <select id="numOptions">
-      <option value="4" selected>4 (A-D)</option>
-      <option value="5">5 (A-E)</option>
-    </select>
-  </label>
+    <label>Tamanho das bolhas:
+      <input type="range" id="bubbleSize" min="10" max="30" value="20">
+      <span id="bubbleSizeValue">20</span>
+    </label>
 
-  <label>Gabaritos por folha:
-    <select id="perPage">
-      <option value="1" selected>1</option>
-      <option value="2">2</option>
-      <option value="4">4</option>
-    </select>
-  </label>
+    <button onclick="printSheet()">Imprimir Cartão</button>
+  </div>
+</div>
 
-  <label>Tamanho das bolhas:
-    <input type="range" id="bubbleSize" min="10" max="30" value="20">
-    <span id="bubbleSizeValue">20</span>
-  </label>
+<!-- Tela Escaneamento Cartão -->
+<div id="escaneamentoScreen" style="display:none;">
+  <div class="controls">
+    <label>Upload das turmas (Excel .xlsx ou .csv):
+      <input type="file" id="fileInput" multiple>
+    </label>
 
-  <button onclick="printSheet()">Imprimir Cartão</button>
+    <label>Selecione a turma:
+      <select id="selectClass">
+        <option value="">-- Selecione --</option>
+      </select>
+    </label>
+
+    <label>Selecione o aluno:
+      <select id="selectStudent">
+        <option value="">-- Selecione --</option>
+      </select>
+    </label>
+
+    <label>Número do aluno:
+      <input type="number" id="studentNumber" min="1">
+    </label>
+
+    <label>Data:
+      <input type="date" id="examDate" value="">
+    </label>
+
+    <button onclick="exportResults()">Exportar Excel</button>
+  </div>
 </div>
 
 <div id="sheetContainer"></div>
@@ -72,6 +103,13 @@
 
 <script>
 let classes = {}; // armazenar dados das turmas
+let results = []; // resultados por aluno
+
+// Alterna telas
+function showScreen(screen){
+  document.getElementById('gabaritoScreen').style.display = (screen==='gabarito')?'block':'none';
+  document.getElementById('escaneamentoScreen').style.display = (screen==='escaneamento')?'block':'none';
+}
 
 // Upload de arquivos Excel
 document.getElementById('fileInput').addEventListener('change', function(e){
@@ -84,7 +122,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
       workbook.SheetNames.forEach(sheetName => {
         const sheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(sheet);
-        classes[sheetName] = json.map(r => r.Nome).filter(n => n); // só nomes válidos
+        classes[sheetName] = json.map(r => r.Nome).filter(n => n);
       });
       updateClassOptions();
     }
@@ -108,7 +146,7 @@ document.getElementById('selectClass').addEventListener('change', function(){
   const selectStudent = document.getElementById('selectStudent');
   selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
   if(classes[turma]){
-    classes[turma].forEach(s => {
+    classes[turma].forEach((s,i) => {
       const opt = document.createElement('option');
       opt.value = s;
       opt.textContent = s;
@@ -117,7 +155,7 @@ document.getElementById('selectClass').addEventListener('change', function(){
   }
 });
 
-// Slider tamanho das bolhas com valor visível
+// Slider tamanho das bolhas
 const bubbleSlider = document.getElementById('bubbleSize');
 const bubbleValue = document.getElementById('bubbleSizeValue');
 bubbleSlider.addEventListener('input', function(){
@@ -128,6 +166,7 @@ bubbleSlider.addEventListener('input', function(){
   });
 });
 
+// Impressão dos cartões
 function printSheet() {
   const numQuestions = parseInt(document.getElementById('numQuestions').value);
   const numOptions = parseInt(document.getElementById('numOptions').value);
@@ -141,23 +180,17 @@ function printSheet() {
     const page = document.createElement('div');
     page.className = 'page';
     
-    // Ajuste de tamanho para caber múltiplos cartões
-    if(perPage === 2){
-      page.style.width = '48%';
-      page.style.height = '95%';
-    } else if(perPage === 4){
-      page.style.width = '48%';
-      page.style.height = '48%';
-    } else {
-      page.style.width = '95%';
-      page.style.height = '95%';
-    }
+    if(perPage === 2){ page.style.width = '48%'; page.style.height = '95%'; }
+    else if(perPage === 4){ page.style.width = '48%'; page.style.height = '48%'; }
+    else{ page.style.width = '95%'; page.style.height = '95%'; }
 
-    // Cabeçalho
+    // Cabeçalho personalizável
     const header = document.createElement('div');
     const turma = document.getElementById('selectClass').value;
     const aluno = document.getElementById('selectStudent').value;
-    header.innerHTML = `<strong>Turma: ${turma || ''} - Nome: ${aluno || ''}</strong>`;
+    const numero = document.getElementById('studentNumber').value;
+    const data = document.getElementById('examDate').value;
+    header.innerHTML = `<strong>Aluno: ${aluno || ''} | Nº: ${numero || ''} | Turma: ${turma || ''} | Data: ${data || ''}</strong>`;
     page.appendChild(header);
 
     // Questões
@@ -177,6 +210,18 @@ function printSheet() {
   }
 
   window.print();
+}
+
+// Exportar Excel (simulação, resultados podem ser preenchidos futuramente pelo escaneamento)
+function exportResults() {
+  if(results.length===0){
+    alert("Nenhum resultado registrado ainda.");
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(results);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+  XLSX.writeFile(wb, "Resultados.xlsx");
 }
 </script>
 
