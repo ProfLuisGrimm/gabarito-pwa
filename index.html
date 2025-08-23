@@ -29,4 +29,156 @@
   <label>Selecione a turma:
     <select id="selectClass">
       <option value="">-- Selecione --</option>
-    </se
+    </select>
+  </label>
+
+  <label>Selecione o aluno:
+    <select id="selectStudent">
+      <option value="">-- Selecione --</option>
+    </select>
+  </label>
+
+  <label>Quantidade de questões:
+    <input type="number" id="numQuestions" value="10" min="1" max="50">
+  </label>
+
+  <label>Alternativas:
+    <select id="numOptions">
+      <option value="4" selected>4 (A-D)</option>
+      <option value="5">5 (A-E)</option>
+    </select>
+  </label>
+
+  <label>Gabaritos por folha:
+    <select id="perPage">
+      <option value="1" selected>1</option>
+      <option value="2">2</option>
+      <option value="4">4</option>
+    </select>
+  </label>
+
+  <label>Tamanho das bolhas:
+    <input type="range" id="bubbleSize" min="10" max="30" value="20">
+    <span id="bubbleSizeValue">20</span>
+  </label>
+
+  <button onclick="printSheet()">Imprimir Cartão</button>
+</div>
+
+<div id="sheetContainer"></div>
+
+<!-- Biblioteca SheetJS para ler Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+let classes = {}; // armazenar dados das turmas
+
+// Upload de arquivos Excel
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const files = e.target.files;
+  for(let f of files){
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const data = new Uint8Array(ev.target.result);
+      const workbook = XLSX.read(data, {type:'array'});
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        classes[sheetName] = json.map(r => r.Nome).filter(n => n); // só nomes válidos
+      });
+      updateClassOptions();
+    }
+    reader.readAsArrayBuffer(f);
+  }
+});
+
+function updateClassOptions(){
+  const selectClass = document.getElementById('selectClass');
+  selectClass.innerHTML = '<option value="">-- Selecione --</option>';
+  Object.keys(classes).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    selectClass.appendChild(opt);
+  });
+}
+
+document.getElementById('selectClass').addEventListener('change', function(){
+  const turma = this.value;
+  const selectStudent = document.getElementById('selectStudent');
+  selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
+  if(classes[turma]){
+    classes[turma].forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      selectStudent.appendChild(opt);
+    });
+  }
+});
+
+// Slider tamanho das bolhas com valor visível
+const bubbleSlider = document.getElementById('bubbleSize');
+const bubbleValue = document.getElementById('bubbleSizeValue');
+bubbleSlider.addEventListener('input', function(){
+  const val = this.value;
+  bubbleValue.textContent = val;
+  document.querySelectorAll('#sheetContainer label').forEach(l => {
+    l.style.fontSize = val + 'px';
+  });
+});
+
+function printSheet() {
+  const numQuestions = parseInt(document.getElementById('numQuestions').value);
+  const numOptions = parseInt(document.getElementById('numOptions').value);
+  const perPage = parseInt(document.getElementById('perPage').value);
+  const bubbleSize = parseInt(document.getElementById('bubbleSize').value);
+
+  const container = document.getElementById('sheetContainer');
+  container.innerHTML = '';
+
+  for(let i=0;i<perPage;i++){
+    const page = document.createElement('div');
+    page.className = 'page';
+    
+    // Ajuste de tamanho para caber múltiplos cartões
+    if(perPage === 2){
+      page.style.width = '48%';
+      page.style.height = '95%';
+    } else if(perPage === 4){
+      page.style.width = '48%';
+      page.style.height = '48%';
+    } else {
+      page.style.width = '95%';
+      page.style.height = '95%';
+    }
+
+    // Cabeçalho
+    const header = document.createElement('div');
+    const turma = document.getElementById('selectClass').value;
+    const aluno = document.getElementById('selectStudent').value;
+    header.innerHTML = `<strong>Turma: ${turma || ''} - Nome: ${aluno || ''}</strong>`;
+    page.appendChild(header);
+
+    // Questões
+    for(let q=1;q<=numQuestions;q++){
+      const qDiv = document.createElement('div');
+      qDiv.className = 'question';
+      let optionsHtml = '';
+      for(let o=0;o<numOptions;o++){
+        const letter = String.fromCharCode(65+o);
+        optionsHtml += `<label style="font-size:${bubbleSize}px"><input type="radio" name="q${q}_${i}" value="${letter}"> ${letter} </label>`;
+      }
+      qDiv.innerHTML = `${q}. ${optionsHtml}`;
+      page.appendChild(qDiv);
+    }
+
+    container.appendChild(page);
+  }
+
+  window.print();
+}
+</script>
+
+</body>
+</html>
