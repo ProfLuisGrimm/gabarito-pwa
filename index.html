@@ -14,8 +14,9 @@
   .question { margin-bottom: 5px; font-size: 12px; }
   #exitBtn { 
     position: fixed; top:10px; right:10px; z-index:1000; 
-    padding:10px 15px; background-color:#e74c3c; color:#fff; 
+    padding:5px 10px; background-color:#e74c3c; color:#fff; 
     font-weight:bold; border:none; border-radius:5px; cursor:pointer; 
+    font-size:14px;
   }
   .headerCard span { display:inline-block; }
   .underline { border-bottom: 1px solid #000; display: inline-block; margin-left:3px; }
@@ -32,7 +33,7 @@
 <body>
 
 <button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">
-  🚪 Sair do app (fechar manualmente no iPhone)
+  Sair ✖
 </button>
 
 <div class="menu">
@@ -67,6 +68,7 @@
       <span id="bubbleSizeValue">20</span>
     </label>
 
+    <button onclick="updateSheet()">Atualizar Gabarito</button>
     <button onclick="printSheet()">Imprimir Cartão</button>
   </div>
 </div>
@@ -90,10 +92,6 @@
       </select>
     </label>
 
-    <label>Número do aluno:
-      <input type="number" id="studentNumber" min="1">
-    </label>
-
     <label>Data:
       <input type="date" id="examDate" value="">
     </label>
@@ -104,13 +102,13 @@
 
 <div id="sheetContainer"></div>
 
-<!-- Biblioteca SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <script>
 let classes = {};
+let studentsData = {}; // estrutura: {turma: [{numero,nome}, ...]}
 let results = [];
 
+// Alterna telas
 function showScreen(screen){
   document.getElementById('gabaritoScreen').style.display = (screen==='gabarito')?'block':'none';
   document.getElementById('escaneamentoScreen').style.display = (screen==='escaneamento')?'block':'none';
@@ -127,7 +125,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
       workbook.SheetNames.forEach(sheetName => {
         const sheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(sheet);
-        classes[sheetName] = json.map(r => r.Nome).filter(n => n);
+        studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
       });
       updateClassOptions();
     }
@@ -138,7 +136,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
 function updateClassOptions(){
   const selectClass = document.getElementById('selectClass');
   selectClass.innerHTML = '<option value="">-- Selecione --</option>';
-  Object.keys(classes).forEach(c => {
+  Object.keys(studentsData).forEach(c => {
     const opt = document.createElement('option');
     opt.value = c;
     opt.textContent = c;
@@ -150,13 +148,22 @@ document.getElementById('selectClass').addEventListener('change', function(){
   const turma = this.value;
   const selectStudent = document.getElementById('selectStudent');
   selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
-  if(classes[turma]){
-    classes[turma].forEach((s,i) => {
+  if(studentsData[turma]){
+    studentsData[turma].forEach(s => {
       const opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = s;
+      opt.value = s.nome;
+      opt.textContent = s.nome;
       selectStudent.appendChild(opt);
     });
+  }
+});
+
+document.getElementById('selectStudent').addEventListener('change', function(){
+  const turma = document.getElementById('selectClass').value;
+  const aluno = this.value;
+  if(turma && aluno){
+    const student = studentsData[turma].find(s => s.nome===aluno);
+    document.getElementById('studentNumber').value = student ? student.numero : '';
   }
 });
 
@@ -166,35 +173,31 @@ const bubbleValue = document.getElementById('bubbleSizeValue');
 bubbleSlider.addEventListener('input', function(){
   const val = this.value;
   bubbleValue.textContent = val;
-  document.querySelectorAll('#sheetContainer label').forEach(l => {
-    l.style.fontSize = val + 'px';
-  });
+  updateSheet();
 });
 
-// Imprimir cartões
-function printSheet() {
+// Atualiza gabarito de visualização
+function updateSheet() {
   const numQuestions = parseInt(document.getElementById('numQuestions').value);
   const numOptions = parseInt(document.getElementById('numOptions').value);
   const perPage = parseInt(document.getElementById('perPage').value);
   const bubbleSize = parseInt(document.getElementById('bubbleSize').value);
-
   const container = document.getElementById('sheetContainer');
   container.innerHTML = '';
 
   for(let i=0;i<perPage;i++){
     const page = document.createElement('div');
     page.className = 'page';
-    
     if(perPage === 2){ page.style.width = '48%'; page.style.height = '95%'; }
     else if(perPage === 4){ page.style.width = '48%'; page.style.height = '48%'; }
     else{ page.style.width = '95%'; page.style.height = '95%'; }
 
-    // Cabeçalho com linhas para preenchimento
-    const header = document.createElement('div');
     const aluno = document.getElementById('selectStudent').value;
     const numero = document.getElementById('studentNumber').value;
     const turma = document.getElementById('selectClass').value;
     const data = document.getElementById('examDate').value;
+
+    const header = document.createElement('div');
     header.className = 'headerCard';
     header.innerHTML = `
       <div>
@@ -208,7 +211,6 @@ function printSheet() {
     `;
     page.appendChild(header);
 
-    // Questões
     for(let q=1;q<=numQuestions;q++){
       const qDiv = document.createElement('div');
       qDiv.className = 'question';
@@ -220,10 +222,13 @@ function printSheet() {
       qDiv.innerHTML = `${q}. ${optionsHtml}`;
       page.appendChild(qDiv);
     }
-
     container.appendChild(page);
   }
+}
 
+// Imprimir cartões
+function printSheet() {
+  updateSheet();
   window.print();
 }
 
@@ -238,7 +243,10 @@ function exportResults() {
   XLSX.utils.book_append_sheet(wb, ws, "Resultados");
   XLSX.writeFile(wb, "Resultados.xlsx");
 }
-</script>
 
+// Inicializa visualização ao carregar
+updateSheet();
+
+</script>
 </body>
 </html>
