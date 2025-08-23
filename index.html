@@ -19,9 +19,20 @@
     font-size:14px;
   }
   .headerCard span { display:inline-block; }
-  .underline { border-bottom: 1px solid #000; display: inline-block; margin-left:3px; }
-  .underline.double { width: 200px; } /* Nome */
-  .underline.standard { width: 50px; } /* Nº, Turma */
+  .underline { 
+    border-bottom: 1px solid #000; 
+    display: inline-block; 
+    width: 200px; 
+    margin-left: 3px; 
+  }
+  #versionTag {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    font-size: 12px;
+    color: #666;
+    z-index: 1000;
+  }
   @media print {
     body * { visibility: hidden; }
     #sheetContainer, #sheetContainer * { visibility: visible; }
@@ -99,11 +110,20 @@
 </div>
 
 <div id="sheetContainer"></div>
+<div id="versionTag"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let studentsData = {}; // {turma: [{numero,nome}, ...]}
+let studentsData = {}; 
 let results = [];
+
+// Contador de versão automático
+let version = localStorage.getItem('appVersion');
+if(!version) version = 1.2;
+else version = parseFloat(version) + 0.1;
+version = Math.round(version*10)/10; // arredonda para 1 casa decimal
+localStorage.setItem('appVersion', version);
+document.getElementById('versionTag').textContent = `Versão ${version}`;
 
 // Alterna telas
 function showScreen(screen){
@@ -197,11 +217,11 @@ function updateSheet() {
     header.className = 'headerCard';
     header.innerHTML = `
       <div>
-        Nome: ${aluno || '____________________________'}
-        &nbsp;&nbsp; Nº: <span class="underline standard">${numero || '____'}</span>
+        Nome: <span class="underline">${aluno || '______________________'}</span>
+        &nbsp;&nbsp; Nº: <span class="underline">${numero || '____'}</span>
       </div>
       <div style="margin-top:5px;">
-        Turma: <span class="underline standard">${turma || '______'}</span>
+        Turma: <span class="underline">${turma || '____'}</span>
       </div>
     `;
     page.appendChild(header);
@@ -238,9 +258,8 @@ function exportResults() {
   XLSX.writeFile(wb, "Resultados.xlsx");
 }
 
-// Inicializa visualização ao carregar
+// Inicializa visualização
 updateSheet();
-
 </script>
 </body>
 </html>
