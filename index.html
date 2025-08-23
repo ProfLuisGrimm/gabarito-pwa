@@ -18,13 +18,6 @@
     font-weight:bold; border:none; border-radius:5px; cursor:pointer; 
     font-size:14px;
   }
-  .headerCard span { display:inline-block; }
-  .underline { 
-    border-bottom: 1px solid #000; /* linha simples */
-    display: inline-block; 
-    width: 200px; 
-    margin-left: 3px; 
-  }
   #versionTag {
     position: fixed;
     bottom: 5px;
@@ -118,7 +111,7 @@ let studentsData = {};
 let results = [];
 
 // Versão fixa do código
-const appVersion = "1.3"; // altere manualmente a cada atualização
+const appVersion = "1.4"; // altere manualmente a cada atualização
 document.getElementById('versionTag').textContent = `Versão ${appVersion}`;
 
 // Alterna telas
@@ -213,12 +206,12 @@ function updateSheet() {
     header.className = 'headerCard';
     header.innerHTML = `
       <div>
-        Nome: <span class="underline">${aluno || '______________________'}</span>
-        &nbsp;&nbsp; Nº: <span class="underline">${numero || '____'}</span>
+        Nome: __________________________
+        &nbsp;&nbsp; Nº: ______
       </div>
       <div style="margin-top:5px;">
-        Turma: <span class="underline">${turma || '____'}</span>
-        &nbsp;&nbsp; Data: <span class="underline">___ / ____ / _____</span>
+        Turma: ______
+        &nbsp;&nbsp; Data: ___ / ___ / _____
       </div>
     `;
     page.appendChild(header);
@@ -233,30 +226,4 @@ function updateSheet() {
       }
       qDiv.innerHTML = `${q}. ${optionsHtml}`;
       page.appendChild(qDiv);
-    }
-    container.appendChild(page);
-  }
-}
-
-// Imprimir cartões
-function printSheet() {
-  window.print();
-}
-
-// Exportar Excel
-function exportResults() {
-  if(results.length===0){
-    alert("Nenhum resultado registrado ainda.");
-    return;
-  }
-  const ws = XLSX.utils.json_to_sheet(results);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
-  XLSX.writeFile(wb, "Resultados.xlsx");
-}
-
-// Inicializa visualização
-updateSheet();
-</script>
-</body>
-</html>
+   
