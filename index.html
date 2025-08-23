@@ -121,7 +121,7 @@ let results = [];
 let version = localStorage.getItem('appVersion');
 if(!version) version = 1.2;
 else version = parseFloat(version) + 0.1;
-version = Math.round(version*10)/10; // arredonda para 1 casa decimal
+version = Math.round(version*10)/10; 
 localStorage.setItem('appVersion', version);
 document.getElementById('versionTag').textContent = `Versão ${version}`;
 
@@ -222,6 +222,7 @@ function updateSheet() {
       </div>
       <div style="margin-top:5px;">
         Turma: <span class="underline">${turma || '____'}</span>
+        &nbsp;&nbsp; Data: <span class="underline">___ / ____ / _____</span>
       </div>
     `;
     page.appendChild(header);
