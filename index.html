@@ -1,50 +1,78 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Gabarito Digital</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  .menu { margin-bottom: 15px; }
-  .menu button { margin-right: 10px; padding: 8px 12px; font-weight:bold; cursor:pointer; }
-  .controls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  :root { --card-border: #000; }
+
+  body { font-family: Arial, sans-serif; margin: 16px; }
+  .menu { margin-bottom: 12px; }
+  .menu button { margin-right: 8px; padding: 8px 12px; font-weight: 600; cursor: pointer; }
+
+  .controls { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
   .controls label { display: flex; flex-direction: column; font-size: 14px; }
-  .page { border: 1px solid #000; margin: 5px; padding: 10px; box-sizing: border-box; }
-  .question { margin-bottom: 5px; font-size: 12px; }
-  #exitBtn { 
-    position: fixed; top:10px; right:10px; z-index:1000; 
-    padding:5px 10px; background-color:#e74c3c; color:#fff; 
-    font-weight:bold; border:none; border-radius:5px; cursor:pointer; 
-    font-size:14px;
+
+  #exitBtn {
+    position: fixed; top: 10px; right: 10px; z-index: 1000;
+    padding: 6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px;
+    font-weight:700; cursor:pointer; font-size:14px;
   }
-  #versionTag {
-    position: fixed;
-    bottom: 5px;
-    right: 10px;
-    font-size: 12px;
+
+  /* Área onde os cartões são renderizados */
+  #sheetContainer {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: flex-start;
+  }
+
+  .page {
+    border: 1px solid var(--card-border);
+    padding: 10px;
+    box-sizing: border-box;
+    background: #fff;
+    position: relative; /* para posicionar a versão */
+  }
+
+  /* Larguras por quantidade de cartões */
+  .per-1 .page { width: 100%; min-height: 1000px; }
+  .per-2 .page { width: calc(50% - 5px); min-height: 1000px; }
+  .per-4 .page { width: calc(50% - 5px); min-height: 500px; }
+
+  .headerCard { margin-bottom: 8px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: nowrap; }
+  .nowrap { white-space: nowrap; }
+
+  .question { margin-bottom: 6px; font-size: 12px; }
+
+  .versionTag {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    font-size: 11px;
     color: #666;
-    z-index: 1000;
   }
+
+  /* Impressão: só o cartão */
   @media print {
-    body * { visibility: hidden; }
-    #sheetContainer, #sheetContainer * { visibility: visible; }
-    #sheetContainer { position: absolute; left:0; top:0; width:100%; }
+    body * { visibility: hidden !important; }
+    #sheetContainer, #sheetContainer * { visibility: visible !important; }
+    #sheetContainer { position: absolute; left: 0; top: 0; width: 100%; }
+    /* tira borda do cartão na impressão, se preferir comente a linha abaixo */
+    .page { border: none; }
   }
 </style>
 </head>
 <body>
 
-<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">
-  Sair ✖
-</button>
+<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ✖</button>
 
 <div class="menu">
   <button onclick="showScreen('gabarito')">Configurar Gabarito</button>
   <button onclick="showScreen('escaneamento')">Escanear Cartão</button>
 </div>
 
-<!-- Tela Configuração Gabarito -->
+<!-- Tela: Configurar Gabarito -->
 <div id="gabaritoScreen">
   <div class="controls">
     <label>Quantidade de questões:
@@ -75,7 +103,7 @@
   </div>
 </div>
 
-<!-- Tela Escaneamento Cartão -->
+<!-- Tela: Escanear Cartão -->
 <div id="escaneamentoScreen" style="display:none;">
   <div class="controls">
     <label>Upload das turmas (Excel .xlsx ou .csv):
@@ -102,39 +130,40 @@
   </div>
 </div>
 
-<div id="sheetContainer"></div>
-<div id="versionTag"></div>
+<!-- Cartões gerados -->
+<div id="sheetContainer" class="per-1"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let studentsData = {}; 
-let results = [];
+/* ===================== Versão do código (manual) ===================== */
+const appVersion = "1.6"; // <— altere manualmente quando atualizar o código
+/* ==================================================================== */
 
-// Versão fixa do código
-const appVersion = "1.4"; // altere manualmente a cada atualização
-document.getElementById('versionTag').textContent = `Versão ${appVersion}`;
+let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
+let results = [];        // placeholder p/ resultados do escaneamento (futuro)
 
 // Alterna telas
 function showScreen(screen){
-  document.getElementById('gabaritoScreen').style.display = (screen==='gabarito')?'block':'none';
-  document.getElementById('escaneamentoScreen').style.display = (screen==='escaneamento')?'block':'none';
+  document.getElementById('gabaritoScreen').style.display = (screen==='gabarito') ? 'block' : 'none';
+  document.getElementById('escaneamentoScreen').style.display = (screen==='escaneamento') ? 'block' : 'none';
 }
 
-// Upload Excel
-document.getElementById('fileInput').addEventListener('change', function(e){
+/* ===================== Upload Excel/CSV p/ turmas ===================== */
+document.getElementById('fileInput')?.addEventListener('change', function(e){
   const files = e.target.files;
-  for(let f of files){
+  for (let f of files){
     const reader = new FileReader();
     reader.onload = function(ev){
       const data = new Uint8Array(ev.target.result);
-      const workbook = XLSX.read(data, {type:'array'});
+      const workbook = XLSX.read(data, { type:'array' });
       workbook.SheetNames.forEach(sheetName => {
         const sheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(sheet);
+        // Espera colunas: Nº | Nome
         studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
       });
       updateClassOptions();
-    }
+    };
     reader.readAsArrayBuffer(f);
   }
 });
@@ -144,13 +173,12 @@ function updateClassOptions(){
   selectClass.innerHTML = '<option value="">-- Selecione --</option>';
   Object.keys(studentsData).forEach(c => {
     const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
+    opt.value = c; opt.textContent = c;
     selectClass.appendChild(opt);
   });
 }
 
-document.getElementById('selectClass').addEventListener('change', function(){
+document.getElementById('selectClass')?.addEventListener('change', function(){
   const turma = this.value;
   const selectStudent = document.getElementById('selectStudent');
   selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
@@ -164,66 +192,105 @@ document.getElementById('selectClass').addEventListener('change', function(){
   }
 });
 
-document.getElementById('selectStudent').addEventListener('change', function(){
+document.getElementById('selectStudent')?.addEventListener('change', function(){
   const turma = document.getElementById('selectClass').value;
   const aluno = this.value;
   if(turma && aluno){
-    const student = studentsData[turma].find(s => s.nome===aluno);
+    const student = studentsData[turma].find(s => s.nome === aluno);
     document.getElementById('studentNumber').value = student ? student.numero : '';
   }
 });
+/* ==================================================================== */
 
-// Slider bolhas
+/* =================== Controles de Configuração ======================= */
 const bubbleSlider = document.getElementById('bubbleSize');
-const bubbleValue = document.getElementById('bubbleSizeValue');
+const bubbleValue  = document.getElementById('bubbleSizeValue');
+['numQuestions','numOptions','perPage'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateSheet);
+});
 bubbleSlider.addEventListener('input', function(){
-  const val = this.value;
-  bubbleValue.textContent = val;
+  bubbleValue.textContent = this.value;
   updateSheet();
 });
+/* ==================================================================== */
 
-// Atualiza gabarito
+/* =================== Renderização dos Cartões ======================== */
 function updateSheet() {
-  const numQuestions = parseInt(document.getElementById('numQuestions').value);
-  const numOptions = parseInt(document.getElementById('numOptions').value);
-  const perPage = parseInt(document.getElementById('perPage').value);
-  const bubbleSize = parseInt(document.getElementById('bubbleSize').value);
+  const numQuestions = parseInt(document.getElementById('numQuestions').value, 10);
+  const numOptions   = parseInt(document.getElementById('numOptions').value, 10);
+  const perPage      = parseInt(document.getElementById('perPage').value, 10);
+  const bubbleSize   = parseInt(document.getElementById('bubbleSize').value, 10);
+
   const container = document.getElementById('sheetContainer');
   container.innerHTML = '';
+  container.classList.remove('per-1','per-2','per-4');
+  container.classList.add(`per-${perPage}`);
 
-  for(let i=0;i<perPage;i++){
+  for (let i = 0; i < perPage; i++) {
     const page = document.createElement('div');
     page.className = 'page';
-    if(perPage === 2){ page.style.width = '48%'; page.style.height = '95%'; }
-    else if(perPage === 4){ page.style.width = '48%'; page.style.height = '48%'; }
-    else{ page.style.width = '95%'; page.style.height = '95%'; }
 
-    const aluno = document.getElementById('selectStudent').value;
-    const numero = document.getElementById('studentNumber').value;
-    const turma = document.getElementById('selectClass').value;
-
+    // Cabeçalho com underscores literais (sem borda/sublinhado CSS)
     const header = document.createElement('div');
     header.className = 'headerCard';
     header.innerHTML = `
-      <div>
-        Nome: __________________________
-        &nbsp;&nbsp; Nº: ______
+      <div class="row">
+        <div>Nome: <span class="nowrap">_______________________________</span></div>
+        <div>Nº: <span class="nowrap">______</span></div>
       </div>
-      <div style="margin-top:5px;">
-        Turma: ______
-        &nbsp;&nbsp; Data: ___ / ___ / _____
+      <div class="row" style="margin-top:6px;">
+        <div>Turma: <span class="nowrap">___________</span></div>
+        <div>Data: <span class="nowrap">___ / ___ / ______</span></div>
       </div>
     `;
     page.appendChild(header);
 
-    for(let q=1;q<=numQuestions;q++){
+    // Questões
+    for (let q = 1; q <= numQuestions; q++) {
       const qDiv = document.createElement('div');
       qDiv.className = 'question';
       let optionsHtml = '';
-      for(let o=0;o<numOptions;o++){
-        const letter = String.fromCharCode(65+o);
-        optionsHtml += `<label style="font-size:${bubbleSize}px"><input type="radio" name="q${q}_${i}" value="${letter}"> ${letter} </label>`;
+      for (let o = 0; o < numOptions; o++) {
+        const letter = String.fromCharCode(65 + o); // A, B, C...
+        optionsHtml += `
+          <label style="font-size:${bubbleSize}px; margin-right:8px;">
+            <input type="radio" name="q${q}_${i}" value="${letter}"> ${letter}
+          </label>`;
       }
       qDiv.innerHTML = `${q}. ${optionsHtml}`;
       page.appendChild(qDiv);
-   
+    }
+
+    // Versão do código — aparece em cada cartão (canto inferior direito)
+    const vTag = document.createElement('div');
+    vTag.className = 'versionTag';
+    vTag.textContent = `Versão ${appVersion}`;
+    page.appendChild(vTag);
+
+    container.appendChild(page);
+  }
+}
+/* ==================================================================== */
+
+/* ======================= Impressão & Export ========================== */
+function printSheet(){ window.print(); }
+
+function exportResults(){
+  if (results.length === 0) {
+    alert("Nenhum resultado registrado ainda.");
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(results);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+  XLSX.writeFile(wb, "Resultados.xlsx");
+}
+/* ==================================================================== */
+
+/* ============================ Init ================================== */
+showScreen('gabarito');
+updateSheet();
+/* ==================================================================== */
+</script>
+</body>
+</html>
