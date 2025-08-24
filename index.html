@@ -6,7 +6,7 @@
 <title>Gabarito Digital</title>
 <style>
   :root {
-    --bubble: 20px; /* inicial, será atualizado pelo slider */
+    --bubble: 22px; /* inicial, será atualizado pelo slider */
   }
 
   body { font-family: Arial, sans-serif; margin: 16px; }
@@ -29,24 +29,33 @@
   .controls label { display:flex; flex-direction:column; font-size:14px; }
 
   /* Área de cartões */
-  #printArea { /* wrapper usado na impressão */
-    display:block;
-  }
+  #printArea { display:block; }
   #sheetContainer {
     display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;
+    justify-content: center;   /* centraliza os cartões na folha */
   }
   .page {
     border: 2px solid #000;     /* borda do cartão */
-    display: inline-block;      /* acompanha o conteúdo */
-    padding: 14px;
     background:#fff;
     position: relative;         /* para posicionar versão */
     box-sizing: border-box;
+    padding: 14px;
+    margin: 10px auto;          /* respiro entre a borda e o limite da folha */
   }
+
   /* tamanhos por quantidade por folha */
-  .layout-1 .page { width: 100%; }
-  .layout-2 .page { width: calc(50% - 5px); }
-  .layout-4 .page { width: calc(50% - 5px); }
+  .layout-1 .page { 
+    width: 18cm;   
+    min-height: 26cm; 
+  }
+  .layout-2 .page { 
+    width: 13cm; 
+    min-height: 18cm;
+  }
+  .layout-4 .page { 
+    width: 9cm; 
+    min-height: 13cm;
+  }
 
   /* Cabeçalho do cartão */
   .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.8; }
@@ -77,10 +86,19 @@
 
   /* Impressão: só os cartões */
   @media print {
+    body { margin:0; padding:0; }
     body * { visibility: hidden !important; }
     #printArea, #printArea * { visibility: visible !important; }
-    #printArea { position: absolute; left:0; top:0; width:100%; }
-    .page { border: 1px solid #000; } /* se quiser sem borda, comente esta linha */
+    #printArea { 
+      position: absolute; 
+      left:0; top:0; 
+      width:100%; 
+      margin: 1cm;   /* margem da folha impressa */
+    }
+    .page {
+      page-break-inside: avoid; /* não corta cartão no meio */
+      border: 1px solid #000;   /* borda só ao redor do cartão */
+    }
   }
 </style>
 </head>
@@ -116,8 +134,8 @@
     </label>
 
     <label>Tamanho das bolhas:
-      <input type="range" id="bubbleSize" min="14" max="36" value="20">
-      <span id="bubbleSizeValue">20 </span> px 
+      <input type="range" id="bubbleSize" min="14" max="36" value="22">
+      <span id="bubbleSizeValue">22</span> px
     </label>
 
     <button onclick="printSheet()">Imprimir</button>
