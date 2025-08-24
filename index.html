@@ -1,370 +1,300 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Gabarito Digital</title>
-<style>
-  :root { --bubble: 22px; }
-
-  /* ===== Base ===== */
-  body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#111; }
-  .menu { display:flex; gap:8px; margin-bottom:12px; }
-  .menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
-  #exitBtn {
-    position: fixed; top:10px; right:10px; z-index:1000;
-    padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px;
-    font-weight:700; cursor:pointer; font-size:14px;
-  }
-
-  /* Screens */
-  .screen { display:none; }
-  .screen.active { display:block; }
-
-  /* Controls */
-  .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-  .controls label { display:flex; flex-direction:column; font-size:14px; }
-  .controls input[type="number"], .controls select, .controls input[type="range"] { padding:6px; }
-
-  /* Print area / container uses grid for deterministic layouts */
-  #printArea { display:block; background:transparent; }
-  #sheetContainer {
-    display:grid;
-    gap: 12px;
-    justify-content: center;
-    align-items: start;
-  }
-
-  .page {
-    border: 2px solid #000;
-    background:#fff;
-    position: relative;
-    box-sizing: border-box;
-    padding: 14px;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
-    overflow: visible;
-  }
-
-  /* Layouts:
-     - layout-1: 1 cartão por folha (centralizado)
-     - layout-2: 2 cartões por folha, empilhados (um em cima, outro embaixo)
-     - layout-4: 4 cartões por folha, grade 2x2
-  */
-  .layout-1 { grid-template-columns: 1fr; justify-items: center; }
-  .layout-1 .page { width: 18cm; min-height: 26cm; }
-
-  .layout-2 { grid-template-columns: 1fr; justify-items: center; grid-auto-rows: min-content; }
-  .layout-2 .page { width: 18cm; min-height: 13cm; }
-
-  .layout-4 { grid-template-columns: repeat(2, 1fr); justify-items: center; }
-  .layout-4 .page { width: 9cm; min-height: 13cm; }
-
-  /* Header & question styles */
-  .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
-  .nowrap { white-space: nowrap; }
-
-  .question { margin-bottom: 8px; font-size: 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  .opts { display:flex; gap:8px; align-items:center; }
-
-  .opt {
-    display:inline-flex;
-    width: var(--bubble);
-    height: var(--bubble);
-    border: 1.6px solid #000;
-    border-radius: 50%;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    user-select:none;
-    box-sizing: border-box;
-  }
-
-  .versionTag {
-    position: absolute;
-    bottom: 6px;
-    right: 8px;
-    font-size: 11px;
-    color: #666;
-  }
-
-  /* Small helpers */
-  .small { font-size: 13px; color:#444; }
-
-  /* Impressão: tornar visível apenas a área de impressão */
-  @media print {
-    body { margin:0; padding:0; background:#fff; }
-    body * { visibility: hidden !important; }
-    #printArea, #printArea * { visibility: visible !important; }
-    #printArea { position: absolute; left:0; top:0; width:100%; margin: 1cm; }
-    .page { page-break-inside: avoid; break-inside: avoid; border: 1px solid #000; }
-    /* ocultar controles/menus ao imprimir */
-    .controls, .menu, #exitBtn { display:none !important; }
-  }
-</style>
-</head>
-<body>
-
-<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ×</button>
-
-<div class="menu">
-  <button onclick="showScreen('gabaritoScreen')">Configurar Gabarito</button>
-  <button onclick="showScreen('escaneamentoScreen')">Escanear Cartão</button>
-</div>
-
-<!-- Tela: Configurar Gabarito -->
-<div id="gabaritoScreen" class="screen active">
-  <div class="controls">
-    <label>Quantidade de questões:
-      <input type="number" id="numQuestions" value="10" min="1" max="200">
-    </label>
-
-    <label>Alternativas:
-      <select id="numOptions">
-        <option value="4" selected>4 (A–D)</option>
-        <option value="5">5 (A–E)</option>
-      </select>
-    </label>
-
-    <label>Gabaritos por folha:
-      <select id="perPage">
-        <option value="1" selected>1</option>
-        <option value="2">2 (empilhado)</option>
-        <option value="4">4 (2x2)</option>
-      </select>
-    </label>
-
-    <label>Tamanho das bolhas:
-      <input type="range" id="bubbleSize" min="14" max="36" value="22">
-      <span id="bubbleSizeValue">22</span> px
-    </label>
-
-    <button onclick="printSheet()">Imprimir</button>
-  </div>
-
-  <!-- Área que será impressa -->
-  <div id="printArea">
-    <div id="sheetContainer" class="layout-1"></div>
-  </div>
-</div>
-
-<!-- Tela: Escanear Cartão -->
-<div id="escaneamentoScreen" class="screen">
-  <div class="controls">
-    <label>Upload das turmas (Excel .xlsx ou .csv):
-      <input type="file" id="fileInput" multiple>
-    </label>
-
-    <label>Turma:
-      <select id="selectClass">
-        <option value="">-- Selecione --</option>
-      </select>
-    </label>
-
-    <label>Aluno:
-      <select id="selectStudent">
-        <option value="">-- Selecione --</option>
-      </select>
-    </label>
-
-    <label>Nº do aluno:
-      <input type="text" id="studentNumber" readonly>
-    </label>
-
-    <button onclick="exportResults()">Exportar Excel</button>
-  </div>
-
-  <p class="small" style="max-width:700px">
-    (Próximo passo) Aqui entra o escaneamento por câmera com confirmação visual e gravação automática.  
-    Por enquanto, você já consegue selecionar Turma/Aluno e exportar resultados simulados.
-  </p>
-</div>
-
-<!-- XLSX (local) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-/* ===================== Versão do código ===================== */
-const appVersion = "1.11";
-/* =========================================================== */
-
-let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
-let results = [];        // placeholder para resultados de escaneamento
-
-/* ===== Navegação ===== */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-/* ===== Elementos UI ===== */
-const numQuestionsEl = document.getElementById('numQuestions');
-const numOptionsEl   = document.getElementById('numOptions');
-const perPageEl      = document.getElementById('perPage');
-const bubbleSizeEl   = document.getElementById('bubbleSize');
-const bubbleSizeVal  = document.getElementById('bubbleSizeValue');
-const sheetContainer = document.getElementById('sheetContainer');
-
-/* Listeners: reagir a mudanças e atualizar visual */
-[numQuestionsEl, numOptionsEl, perPageEl].forEach(el => {
-  el.addEventListener('change', updateSheet);
-});
-bubbleSizeEl.addEventListener('input', () => {
-  const v = parseInt(bubbleSizeEl.value, 10);
-  bubbleSizeVal.textContent = v;
-  document.documentElement.style.setProperty('--bubble', v + 'px');
-  updateSheet();
-});
-
-/* ===== Renderização dos cartões ===== */
-function updateSheet() {
-  const numQuestions = parseInt(numQuestionsEl.value, 10) || 0;
-  const numOptions   = parseInt(numOptionsEl.value, 10) || 4;
-  const perPage      = parseInt(perPageEl.value, 10) || 1;
-
-  // Limpeza e classe de layout
-  sheetContainer.innerHTML = '';
-  sheetContainer.className = '';
-  sheetContainer.classList.add(`layout-${perPage}`);
-
-  // Para cada cartão presente na folha
-  for (let i = 0; i < perPage; i++) {
-    const page = document.createElement('div');
-    page.className = 'page';
-
-    // Cabeçalho com underscores
-    const header = document.createElement('div');
-    header.className = 'headerCard';
-    header.innerHTML = `
-      <div>
-        Nome: <span class="nowrap">______________________________</span>
-        &nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span>
-      </div>
-      <div>
-        Turma: <span class="nowrap">____________</span>
-        &nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span>
-      </div>
-    `;
-    page.appendChild(header);
-
-    // Questões
-    for (let q = 1; q <= numQuestions; q++) {
-      const qDiv = document.createElement('div');
-      qDiv.className = 'question';
-      const numLabel = document.createElement('div');
-      numLabel.textContent = q + '.';
-      numLabel.style.minWidth = '26px';
-      const optsWrapper = document.createElement('div');
-      optsWrapper.className = 'opts';
-      for (let o = 0; o < numOptions; o++) {
-        const letter = String.fromCharCode(65 + o);
-        const span = document.createElement('span');
-        span.className = 'opt';
-        span.dataset.q = q;
-        span.dataset.opt = letter;
-        span.textContent = letter;
-        optsWrapper.appendChild(span);
-      }
-      qDiv.appendChild(numLabel);
-      qDiv.appendChild(optsWrapper);
-      page.appendChild(qDiv);
+  <meta charset="UTF-8">
+  <title>Cartão-Resposta</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f4f4;
     }
 
-    // Versão
-    const vTag = document.createElement('div');
-    vTag.className = 'versionTag';
-    vTag.textContent = `Versão ${appVersion}`;
-    page.appendChild(vTag);
+    /* Container geral */
+    #app {
+      max-width: 1200px;
+      margin: auto;
+    }
 
-    sheetContainer.appendChild(page);
-  }
-}
+    /* Abas */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+    }
+    .tab.active {
+      background: #fff;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 0 5px 5px 5px;
+      padding: 20px;
+    }
+    .tab-content.active {
+      display: block;
+    }
 
-/* ===== Impressão (só #printArea) ===== */
-function printSheet() {
-  // O CSS @media print já isola #printArea; basta chamar print()
-  window.print();
-}
+    /* Configurações */
+    .config-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: inline-block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
 
-/* ===== Upload Excel (Turmas) ===== */
-document.getElementById('fileInput').addEventListener('change', function(e){
-  const files = e.target.files;
-  for (let f of files) {
-    const reader = new FileReader();
-    reader.onload = function(ev){
-      try {
-        const data = new Uint8Array(ev.target.result);
-        const workbook = XLSX.read(data, { type:'array' });
-        workbook.SheetNames.forEach(sheetName => {
-          const sheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-          // Tenta colunas comuns: "Nº" e "Nome" (case variants)
-          studentsData[sheetName] = json.map(r => {
-            const numero = r['Nº'] ?? r['Nr'] ?? r['Nr.'] ?? r['Numero'] ?? r['Número'] ?? r['N'] ?? '';
-            const nome = r['Nome'] ?? r['name'] ?? r['nome'] ?? '';
-            return { numero, nome };
-          });
-        });
-        updateClassOptions();
-      } catch (err) {
-        console.error(err);
-        alert('Erro ao ler arquivo. Verifique o formato do Excel/CSV.');
+    /* Input inline (bolha + px) */
+    .input-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .input-inline input {
+      width: 60px;
+    }
+
+    /* Área de cartões */
+    #sheetContainer {
+      display:flex; 
+      flex-wrap:wrap; 
+      gap:10px; 
+      align-items:flex-start;
+      justify-content: center;
+    }
+
+    .page {
+      border: 1px solid #000;     /* borda do cartão */
+      background:#fff;
+      position: relative;
+      box-sizing: border-box;
+      padding: 14px;
+      margin: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+    }
+
+    /* tamanhos por quantidade por folha */
+    .layout-1 .page { 
+      width: 18cm;   
+      min-height: 26cm;
+    }
+    .layout-2 .page { 
+      width: 13cm; 
+      min-height: 18cm;
+    }
+    .layout-4 .page { 
+      width: 9cm; 
+      min-height: 13cm;
+    }
+
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .header div {
+      margin: 5px 0;
+    }
+    .questions {
+      width: 100%;
+    }
+    .question {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    .question-number {
+      width: 30px;
+    }
+    .options {
+      display: flex;
+      gap: 10px;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #000;
+      border-radius: 50%;
+      font-size: 12px;
+      width: var(--bubble-size, 25px);
+      height: var(--bubble-size, 25px);
+    }
+    .footer {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 10px;
+    }
+
+    /* Impressão */
+    @media print {
+      body { margin:0; padding:0; background:#fff; }
+      body * { visibility: hidden !important; }
+      #printArea, #printArea * { visibility: visible !important; }
+      #printArea { 
+        position: absolute; 
+        left:0; top:0; 
+        width:100%; 
+        margin: 1cm;   /* margem da folha impressa */
       }
-    };
-    reader.readAsArrayBuffer(f);
-  }
-});
+      .page {
+        page-break-inside: avoid; 
+        border: 1px solid #000;  
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="tabs">
+      <div class="tab active" data-tab="config">Configurações</div>
+      <div class="tab" data-tab="preview">Visualizar</div>
+    </div>
 
-function updateClassOptions(){
-  const selectClass = document.getElementById('selectClass');
-  selectClass.innerHTML = '<option value="">-- Selecione --</option>';
-  Object.keys(studentsData).forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    selectClass.appendChild(opt);
-  });
+    <!-- Aba de Configuração -->
+    <div id="config" class="tab-content active">
+      <div class="config-group">
+        <label for="questions">Número de questões:</label>
+        <input type="number" id="questions" value="10" min="5" max="100">
+      </div>
+      <div class="config-group">
+        <label for="options">Opções por questão:</label>
+        <select id="options">
+          <option value="5">5 (A-E)</option>
+          <option value="4">4 (A-D)</option>
+          <option value="3">3 (A-C)</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <label for="layout">Cartões por folha:</label>
+        <select id="layout">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <label for="bubbleSize">Tamanho da bolha:</label>
+        <span class="input-inline">
+          <input type="number" id="bubbleSize" value="25" min="10" max="60"> px
+        </span>
+      </div>
+      <button id="generate">Gerar Cartões</button>
+      <button id="print">Imprimir</button>
+    </div>
 
-  // limpa seleções
-  document.getElementById('selectStudent').innerHTML = '<option value="">-- Selecione --</option>';
-  document.getElementById('studentNumber').value = '';
-}
+    <!-- Aba de Visualização -->
+    <div id="preview" class="tab-content">
+      <div id="printArea">
+        <div id="sheetContainer" class="layout-1"></div>
+      </div>
+    </div>
+  </div>
 
-document.getElementById('selectClass').addEventListener('change', function(){
-  const turma = this.value;
-  const selectStudent = document.getElementById('selectStudent');
-  selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
-  if (studentsData[turma]) {
-    studentsData[turma].forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.nome;
-      opt.textContent = s.nome || s.numero || '(sem nome)';
-      opt.dataset.numero = s.numero ?? '';
-      selectStudent.appendChild(opt);
+  <script>
+    // Troca de abas
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
     });
-  }
-  document.getElementById('studentNumber').value = '';
-});
 
-document.getElementById('selectStudent').addEventListener('change', function(){
-  const numero = this.selectedOptions[0]?.dataset?.numero || '';
-  document.getElementById('studentNumber').value = numero;
-});
+    // Função para criar um cartão
+    function criarCartao(numQuestions, numOptions, bubbleSize) {
+      const page = document.createElement('div');
+      page.className = 'page';
+      page.style.setProperty('--bubble-size', bubbleSize);
 
-/* ===== Exportar Resultados (placeholder) ===== */
-function exportResults(){
-  if (results.length === 0) {
-    alert("Nenhum resultado registrado ainda.");
-    return;
-  }
-  const ws = XLSX.utils.json_to_sheet(results);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
-  XLSX.writeFile(wb, "Resultados.xlsx");
-}
+      // Cabeçalho
+      const header = document.createElement('div');
+      header.className = 'header';
+      header.innerHTML = `
+        <div>Nome: ___________________________</div>
+        <div>Nº: ______</div>
+        <div>Turma: ____________</div>
+        <div>Data: ____/____/______</div>
+      `;
+      page.appendChild(header);
 
-/* ===== Inicialização ===== */
-document.documentElement.style.setProperty('--bubble', bubbleSizeEl.value + 'px');
-document.getElementById('bubbleSizeValue').textContent = bubbleSizeEl.value;
-updateSheet();
+      // Questões
+      const questionsDiv = document.createElement('div');
+      questionsDiv.className = 'questions';
+      for (let i = 1; i <= numQuestions; i++) {
+        const q = document.createElement('div');
+        q.className = 'question';
 
-</script>
+        const qNum = document.createElement('div');
+        qNum.className = 'question-number';
+        qNum.textContent = i + '.';
+        q.appendChild(qNum);
+
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'options';
+        for (let j = 0; j < numOptions; j++) {
+          const option = document.createElement('div');
+          option.className = 'option';
+          option.textContent = String.fromCharCode(65 + j);
+          optionsDiv.appendChild(option);
+        }
+        q.appendChild(optionsDiv);
+        questionsDiv.appendChild(q);
+      }
+      page.appendChild(questionsDiv);
+
+      // Rodapé
+      const footer = document.createElement('div');
+      footer.className = 'footer';
+      footer.textContent = 'Versão 1.0';
+      page.appendChild(footer);
+
+      return page;
+    }
+
+    // Gerar cartões
+    document.getElementById('generate').addEventListener('click', () => {
+      const numQuestions = parseInt(document.getElementById('questions').value, 10);
+      const numOptions = parseInt(document.getElementById('options').value, 10);
+      const layout = document.getElementById('layout').value;
+      const bubbleSize = document.getElementById('bubbleSize').value + 'px';
+
+      const sheetContainer = document.getElementById('sheetContainer');
+      sheetContainer.className = 'layout-' + layout;
+      sheetContainer.innerHTML = '';
+
+      const qtdCartoes = parseInt(layout, 10);
+      for (let i = 0; i < qtdCartoes; i++) {
+        sheetContainer.appendChild(criarCartao(numQuestions, numOptions, bubbleSize));
+      }
+
+      // Trocar para aba de preview
+      document.querySelector('.tab[data-tab="preview"]').click();
+    });
+
+    // Botão imprimir
+    document.getElementById('print').addEventListener('click', () => {
+      window.print();
+    });
+  </script>
 </body>
 </html>
