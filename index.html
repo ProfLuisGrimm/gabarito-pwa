@@ -27,7 +27,7 @@
   /* Controles */
   .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
   .controls label { display:flex; flex-direction:column; font-size:14px; }
-  /* wrapper para manter valor + "px" na MESMA linha */
+  /* (NOVO) manter valor + "px" na mesma linha */
   .controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 
   /* Área de cartões */
@@ -35,23 +35,20 @@
     display:block;
   }
   #sheetContainer {
-    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; justify-content:center;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;
   }
-
   .page {
     border: 2px solid #000;     /* borda do cartão */
     display: inline-block;      /* acompanha o conteúdo */
     padding: 14px;
     background:#fff;
-    position: relative;         /* (antes era para a versão, agora não precisamos mais) */
+    position: relative;         /* para posicionar versão (não usamos mais) */
     box-sizing: border-box;
-    margin: 4px;
   }
-
-  /* tamanhos por quantidade por folha – deixam de ocupar a largura toda e viram "cartões" */
-  .layout-1 .page { width: 18cm; min-height: 26cm; }
-  .layout-2 .page { width: 13cm; min-height: 18cm; }
-  .layout-4 .page { width: 9cm;  min-height: 13cm; }
+  /* tamanhos por quantidade por folha (mantido como no seu original) */
+  .layout-1 .page { width: 100%; }
+  .layout-2 .page { width: calc(50% - 5px); }
+  .layout-4 .page { width: calc(50% - 5px); }
 
   /* Cabeçalho do cartão */
   .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.8; }
@@ -72,7 +69,7 @@
     user-select:none;
   }
 
-  /* Versão FIXA na TELA (fora do cartão) */
+  /* (NOVO) Versão FIXA na TELA (fora do cartão) */
   #appVersion {
     position: fixed;
     right: 10px;
@@ -88,7 +85,7 @@
     body * { visibility: hidden !important; }
     #printArea, #printArea * { visibility: visible !important; }
     #printArea { position: absolute; left:0; top:0; width:100%; }
-    .page { border: 1px solid #000; page-break-inside: avoid; break-inside: avoid; }
+    .page { border: 1px solid #000; } /* se quiser sem borda, comente esta linha */
     /* esconder elementos de UI e a versão na impressão */
     .menu, .controls, #exitBtn, #appVersion { display:none !important; }
   }
@@ -126,6 +123,7 @@
     </label>
 
     <label>Tamanho das bolhas:
+      <!-- (ALTERADO) wrapper inline para não quebrar o "px" -->
       <span class="inline">
         <input type="range" id="bubbleSize" min="14" max="36" value="22">
         <span id="bubbleSizeValue">22</span><span>px</span>
@@ -141,4 +139,210 @@
   </div>
 </div>
 
-<!-- Tela: Escanear Cartão
+<!-- Tela: Escanear Cartão -->
+<div id="escaneamentoScreen" class="screen">
+  <div class="controls">
+    <label>Upload das turmas (Excel .xlsx ou .csv):
+      <input type="file" id="fileInput" multiple>
+    </label>
+
+    <label>Turma:
+      <select id="selectClass">
+        <option value="">-- Selecione --</option>
+      </select>
+    </label>
+
+    <label>Aluno:
+      <select id="selectStudent">
+        <option value="">-- Selecione --</option>
+      </select>
+    </label>
+
+    <label>Nº do aluno:
+      <input type="text" id="studentNumber" readonly>
+    </label>
+
+    <button onclick="exportResults()">Exportar Excel</button>
+  </div>
+
+  <p style="max-width:700px">
+    (Próximo passo) Aqui entra o escaneamento por câmera com confirmação visual e gravação automática.  
+    Por enquanto, você já consegue selecionar Turma/Aluno e exportar resultados simulados.
+  </p>
+</div>
+
+<!-- (NOVO) Versão fixa na tela (fora do cartão) -->
+<div id="appVersion">Versão 1.8</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ===================== Versão do código (manual) ===================== */
+const appVersion = "1.8"; // altere manualmente quando atualizar o código
+/* ==================================================================== */
+
+let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
+let results = [];        // placeholder para resultados de escaneamento
+
+/* ============================ Navegação ============================== */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+/* ==================================================================== */
+
+/* ========================= Configurações UI ========================= */
+const numQuestionsEl = document.getElementById('numQuestions');
+const numOptionsEl   = document.getElementById('numOptions');
+const perPageEl      = document.getElementById('perPage');
+const bubbleSizeEl   = document.getElementById('bubbleSize');
+const bubbleSizeVal  = document.getElementById('bubbleSizeValue');
+
+[numQuestionsEl, numOptionsEl, perPageEl].forEach(el => {
+  el.addEventListener('change', updateSheet);
+});
+bubbleSizeEl.addEventListener('input', () => {
+  const v = parseInt(bubbleSizeEl.value, 10);
+  bubbleSizeVal.textContent = v;
+  document.documentElement.style.setProperty('--bubble', v + 'px');
+  updateSheet();
+});
+/* ==================================================================== */
+
+/* =================== Renderização dos Cartões ======================= */
+function updateSheet() {
+  const numQuestions = parseInt(numQuestionsEl.value, 10);
+  const numOptions   = parseInt(numOptionsEl.value, 10);
+  const perPage      = parseInt(perPageEl.value, 10);
+
+  const container = document.getElementById('sheetContainer');
+  container.innerHTML = '';
+  container.classList.remove('layout-1','layout-2','layout-4');
+  container.classList.add(`layout-${perPage}`);
+
+  for (let i = 0; i < perPage; i++) {
+    const page = document.createElement('div');
+    page.className = 'page';
+
+    // Cabeçalho com underscores literais
+    const header = document.createElement('div');
+    header.className = 'headerCard';
+    header.innerHTML = `
+      <div>
+        Nome: <span class="nowrap">______________________________</span>
+        &nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span>
+      </div>
+      <div>
+        Turma: <span class="nowrap">____________</span>
+        &nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span>
+      </div>
+    `;
+    page.appendChild(header);
+
+    // Questões e opções (bolhas desenhadas via CSS)
+    for (let q = 1; q <= numQuestions; q++) {
+      const qDiv = document.createElement('div');
+      qDiv.className = 'question';
+      let opts = '';
+      for (let o = 0; o < numOptions; o++) {
+        const letter = String.fromCharCode(65 + o);
+        opts += `<span class="opt" data-q="${q}" data-opt="${letter}">${letter}</span>`;
+      }
+      qDiv.innerHTML = `${q}. ${opts}`;
+      page.appendChild(qDiv);
+    }
+
+    // (REMOVIDO) versão dentro do cartão para não afetar a borda
+    // const vTag = document.createElement('div');
+    // vTag.className = 'versionTag';
+    // vTag.textContent = `Versão ${appVersion}`;
+    // page.appendChild(vTag);
+
+    container.appendChild(page);
+  }
+}
+/* ==================================================================== */
+
+/* ===================== Upload Excel (Turmas) ======================== */
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const files = e.target.files;
+  for (let f of files) {
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const data = new Uint8Array(ev.target.result);
+      const workbook = XLSX.read(data, { type:'array' });
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        // Espera colunas: Nº | Nome
+        studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
+      });
+      updateClassOptions();
+    };
+    reader.readAsArrayBuffer(f);
+  }
+});
+
+function updateClassOptions(){
+  const selectClass = document.getElementById('selectClass');
+  selectClass.innerHTML = '<option value="">-- Selecione --</option>';
+  Object.keys(studentsData).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    selectClass.appendChild(opt);
+  });
+
+  // limpa seleções
+  document.getElementById('selectStudent').innerHTML = '<option value="">-- Selecione --</option>';
+  document.getElementById('studentNumber').value = '';
+}
+
+document.getElementById('selectClass').addEventListener('change', function(){
+  const turma = this.value;
+  const selectStudent = document.getElementById('selectStudent');
+  selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
+  if (studentsData[turma]) {
+    studentsData[turma].forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.nome;
+      opt.textContent = s.nome;
+      opt.dataset.numero = s.numero ?? '';
+      selectStudent.appendChild(opt);
+    });
+  }
+  document.getElementById('studentNumber').value = '';
+});
+
+document.getElementById('selectStudent').addEventListener('change', function(){
+  const numero = this.selectedOptions[0]?.dataset?.numero || '';
+  document.getElementById('studentNumber').value = numero;
+});
+/* ==================================================================== */
+
+/* ======================= Exportar Resultados ======================== */
+function exportResults(){
+  if (results.length === 0) {
+    alert("Nenhum resultado registrado ainda.");
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(results);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+  XLSX.writeFile(wb, "Resultados.xlsx");
+}
+/* ==================================================================== */
+
+/* ======================= Imprimir apenas cartões ==================== */
+function printSheet(){
+  window.print(); // @media print já isola #printArea
+}
+/* ==================================================================== */
+
+/* ============================== Init ================================ */
+document.documentElement.style.setProperty('--bubble', bubbleSizeEl.value + 'px');
+document.getElementById('bubbleSizeValue').textContent = bubbleSizeEl.value;
+document.getElementById('appVersion').textContent = `Versão ${appVersion}`;
+updateSheet();
+/* ==================================================================== */
+</script>
+</body>
+</html>
