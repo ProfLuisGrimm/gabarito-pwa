@@ -1,229 +1,144 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Cartão Resposta</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 20px;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gabarito Digital</title>
+<style>
+  :root {
+    --bubble: 22px; /* inicial, será atualizado pelo slider */
+  }
 
-    .tabs {
-      display: flex;
-      margin-bottom: 20px;
-    }
+  body { font-family: Arial, sans-serif; margin: 16px; }
 
-    .tab-button {
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      background: #eee;
-      cursor: pointer;
-    }
+  /* Navegação */
+  .menu { display:flex; gap:8px; margin-bottom:12px; }
+  .menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
+  #exitBtn {
+    position: fixed; top:10px; right:10px; z-index:1000;
+    padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px;
+    font-weight:700; cursor:pointer; font-size:14px;
+  }
 
-    .tab-button.active {
-      background: #ddd;
-      font-weight: bold;
-    }
+  /* Telas */
+  .screen { display:none; }
+  .screen.active { display:block; }
 
-    .tab-content {
-      display: none;
-    }
+  /* Controles */
+  .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .controls label { display:flex; flex-direction:column; font-size:14px; }
+  /* wrapper para manter valor + "px" na MESMA linha */
+  .controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 
-    .tab-content.active {
-      display: block;
-    }
+  /* Área de cartões */
+  #printArea { /* wrapper usado na impressão */
+    display:block;
+  }
+  #sheetContainer {
+    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; justify-content:center;
+  }
 
-    .controls {
-      margin-bottom: 20px;
-    }
+  .page {
+    border: 2px solid #000;     /* borda do cartão */
+    display: inline-block;      /* acompanha o conteúdo */
+    padding: 14px;
+    background:#fff;
+    position: relative;         /* (antes era para a versão, agora não precisamos mais) */
+    box-sizing: border-box;
+    margin: 4px;
+  }
 
-    .controls label {
-      margin-right: 10px;
-    }
+  /* tamanhos por quantidade por folha – deixam de ocupar a largura toda e viram "cartões" */
+  .layout-1 .page { width: 18cm; min-height: 26cm; }
+  .layout-2 .page { width: 13cm; min-height: 18cm; }
+  .layout-4 .page { width: 9cm;  min-height: 13cm; }
 
-    .controls input[type="number"] {
-      width: 60px;
-    }
+  /* Cabeçalho do cartão */
+  .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.8; }
+  .nowrap { white-space: nowrap; }
 
-    .input-inline {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
+  /* Questões/bolhas */
+  .question { margin-bottom: 8px; font-size: 14px; }
+  .opt {
+    display:inline-flex;
+    width: var(--bubble);
+    height: var(--bubble);
+    border: 1.6px solid #000;
+    border-radius: 50%;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    margin-right:8px;
+    user-select:none;
+  }
 
-    .print-area {
-      display: grid;
-      gap: 20px;
-      justify-content: center;
-    }
+  /* Versão FIXA na TELA (fora do cartão) */
+  #appVersion {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    font-size: 12px;
+    color: #666;
+    z-index: 1000;
+    pointer-events: none;
+  }
 
-    .page {
-      border: 1px solid #000;
-      background: #fff;
-      box-sizing: border-box;
-      padding: 15px;
-      margin: 0 auto;
-      width: 18cm;
-      height: 26cm;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 12px;
-    }
-
-    .header div {
-      flex: 1;
-    }
-
-    .questions {
-      flex-grow: 1;
-    }
-
-    .question {
-      margin: 4px 0;
-    }
-
-    .bubbles {
-      display: inline-flex;
-      gap: 8px;
-      margin-left: 10px;
-    }
-
-    .bubble {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #000;
-      border-radius: 50%;
-      font-size: 12px;
-    }
-
-    /* contador da versão fixo fora do cartão */
-    #version {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      font-size: 12px;
-      color: #333;
-    }
-
-    @media print {
-      body {
-        background: #fff;
-      }
-      .tabs, .controls, button {
-        display: none;
-      }
-      #version {
-        position: fixed;
-        bottom: 5px;
-        right: 10px;
-      }
-    }
-  </style>
+  /* Impressão: só os cartões */
+  @media print {
+    body * { visibility: hidden !important; }
+    #printArea, #printArea * { visibility: visible !important; }
+    #printArea { position: absolute; left:0; top:0; width:100%; }
+    .page { border: 1px solid #000; page-break-inside: avoid; break-inside: avoid; }
+    /* esconder elementos de UI e a versão na impressão */
+    .menu, .controls, #exitBtn, #appVersion { display:none !important; }
+  }
+</style>
 </head>
 <body>
-  <div class="tabs">
-    <div class="tab-button active" data-tab="gabarito">Gabarito</div>
-    <div class="tab-button" data-tab="config">Configurações</div>
-  </div>
 
-  <!-- Aba Gabarito -->
-  <div id="gabarito" class="tab-content active">
-    <div class="print-area" id="printArea">
-      <div class="page">
-        <div class="header">
-          <div>Nome: ________________________</div>
-          <div>Nº: ______</div>
-        </div>
-        <div class="header">
-          <div>Turma: ________________________</div>
-          <div>Data: ____/____/______</div>
-        </div>
-        <div class="questions" id="questions"></div>
-      </div>
-    </div>
-    <button onclick="printDiv()">Imprimir</button>
-  </div>
+<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ×</button>
 
-  <!-- Aba Configurações -->
-  <div id="config" class="tab-content">
-    <div class="controls">
-      <label for="numQuestions">Número de questões:</label>
-      <input type="number" id="numQuestions" value="10" min="1" max="100">
+<div class="menu">
+  <button onclick="showScreen('gabaritoScreen')">Configurar Gabarito</button>
+  <button onclick="showScreen('escaneamentoScreen')">Escanear Cartão</button>
+</div>
 
-      <label for="bubbleSize">Tamanho da bolha:</label>
-      <span class="input-inline">
-        <input type="number" id="bubbleSize" value="25" min="10" max="60"> px
+<!-- Tela: Configurar Gabarito -->
+<div id="gabaritoScreen" class="screen active">
+  <div class="controls">
+    <label>Quantidade de questões:
+      <input type="number" id="numQuestions" value="10" min="1" max="60">
+    </label>
+
+    <label>Alternativas:
+      <select id="numOptions">
+        <option value="4" selected>4 (A–D)</option>
+        <option value="5">5 (A–E)</option>
+      </select>
+    </label>
+
+    <label>Gabaritos por folha:
+      <select id="perPage">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="4">4</option>
+      </select>
+    </label>
+
+    <label>Tamanho das bolhas:
+      <span class="inline">
+        <input type="range" id="bubbleSize" min="14" max="36" value="22">
+        <span id="bubbleSizeValue">22</span><span>px</span>
       </span>
-    </div>
-    <button onclick="generateQuestions()">Atualizar Gabarito</button>
+    </label>
+
+    <button onclick="printSheet()">Imprimir</button>
   </div>
 
-  <!-- contador da versão fora do cartão -->
-  <div id="version">Versão 1.10</div>
+  <!-- Área que será impressa -->
+  <div id="printArea">
+    <div id="sheetContainer" class="layout-1"></div>
+  </div>
+</div>
 
-  <script>
-    const tabs = document.querySelectorAll(".tab-button");
-    const contents = document.querySelectorAll(".tab-content");
-
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        contents.forEach(c => c.classList.remove("active"));
-        tab.classList.add("active");
-        document.getElementById(tab.dataset.tab).classList.add("active");
-      });
-    });
-
-    function generateQuestions() {
-      const numQuestions = document.getElementById("numQuestions").value;
-      const bubbleSize = document.getElementById("bubbleSize").value;
-      const questionsDiv = document.getElementById("questions");
-      questionsDiv.innerHTML = "";
-
-      for (let i = 1; i <= numQuestions; i++) {
-        const qDiv = document.createElement("div");
-        qDiv.className = "question";
-        qDiv.innerHTML = `${i}. `;
-
-        const bubblesDiv = document.createElement("div");
-        bubblesDiv.className = "bubbles";
-
-        ["A","B","C","D","E"].forEach(letter => {
-          const b = document.createElement("div");
-          b.className = "bubble";
-          b.style.width = bubbleSize + "px";
-          b.style.height = bubbleSize + "px";
-          b.textContent = letter;
-          bubblesDiv.appendChild(b);
-        });
-
-        qDiv.appendChild(bubblesDiv);
-        questionsDiv.appendChild(qDiv);
-      }
-    }
-
-    function printDiv() {
-      const printContents = document.getElementById("printArea").innerHTML;
-      const originalContents = document.body.innerHTML;
-      document.body.innerHTML = printContents;
-      window.print();
-      document.body.innerHTML = originalContents;
-      location.reload();
-    }
-
-    // gerar inicial
-    generateQuestions();
-  </script>
-</body>
-</html>
+<!-- Tela: Escanear Cartão
