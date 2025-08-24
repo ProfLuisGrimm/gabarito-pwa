@@ -183,7 +183,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ===================== Versão do código ===================== */
-const appVersion = "1.10";
+const appVersion = "1.11";
 /* =========================================================== */
 
 let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
@@ -230,7 +230,7 @@ function updateSheet() {
     const page = document.createElement('div');
     page.className = 'page';
 
-    // Cabeçalho com underscales
+    // Cabeçalho com underscores
     const header = document.createElement('div');
     header.className = 'headerCard';
     header.innerHTML = `
@@ -296,9 +296,9 @@ document.getElementById('fileInput').addEventListener('change', function(e){
         workbook.SheetNames.forEach(sheetName => {
           const sheet = workbook.Sheets[sheetName];
           const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-          // Tenta colunas comuns: "Nº" e "Nome" (case sensitive)
+          // Tenta colunas comuns: "Nº" e "Nome" (case variants)
           studentsData[sheetName] = json.map(r => {
-            const numero = r['Nº'] ?? r['Nr'] ?? r['Numero'] ?? r['Número'] ?? r['N'] ?? '';
+            const numero = r['Nº'] ?? r['Nr'] ?? r['Nr.'] ?? r['Numero'] ?? r['Número'] ?? r['N'] ?? '';
             const nome = r['Nome'] ?? r['name'] ?? r['nome'] ?? '';
             return { numero, nome };
           });
