@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Gabarito Digital</title>
 <style>
-  :root {
-    --bubble: 22px; /* inicial, será atualizado pelo slider */
-  }
+  :root { --bubble: 22px; }
 
   body { font-family: Arial, sans-serif; margin: 16px; }
 
@@ -27,25 +25,25 @@
   /* Controles */
   .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
   .controls label { display:flex; flex-direction:column; font-size:14px; }
-  /* (NOVO) manter valor + "px" na mesma linha */
+  /* wrapper inline para manter "valor + px" na mesma linha */
   .controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 
   /* Área de cartões */
-  #printArea { /* wrapper usado na impressão */
-    display:block;
-  }
+  #printArea { display:block; }
   #sheetContainer {
-    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; justify-content:center;
   }
+
   .page {
     border: 2px solid #000;     /* borda do cartão */
     display: inline-block;      /* acompanha o conteúdo */
     padding: 14px;
     background:#fff;
-    position: relative;         /* para posicionar versão (não usamos mais) */
+    position: relative;
     box-sizing: border-box;
   }
-  /* tamanhos por quantidade por folha (mantido como no seu original) */
+
+  /* tamanhos por quantidade por folha (mantive o comportamento original) */
   .layout-1 .page { width: 100%; }
   .layout-2 .page { width: calc(50% - 5px); }
   .layout-4 .page { width: calc(50% - 5px); }
@@ -69,7 +67,7 @@
     user-select:none;
   }
 
-  /* (NOVO) Versão FIXA na TELA (fora do cartão) */
+  /* Versão FIXA na TELA (fora do cartão) */
   #appVersion {
     position: fixed;
     right: 10px;
@@ -85,8 +83,8 @@
     body * { visibility: hidden !important; }
     #printArea, #printArea * { visibility: visible !important; }
     #printArea { position: absolute; left:0; top:0; width:100%; }
-    .page { border: 1px solid #000; } /* se quiser sem borda, comente esta linha */
-    /* esconder elementos de UI e a versão na impressão */
+    .page { border: 1px solid #000; page-break-inside: avoid; break-inside: avoid; }
+    /* esconder elementos de UI e versão na impressão */
     .menu, .controls, #exitBtn, #appVersion { display:none !important; }
   }
 </style>
@@ -96,8 +94,8 @@
 <button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ×</button>
 
 <div class="menu">
-  <button onclick="showScreen('gabaritoScreen')">Configurar Gabarito</button>
-  <button onclick="showScreen('escaneamentoScreen')">Escanear Cartão</button>
+  <button id="menuConfig">Configurar Gabarito</button>
+  <button id="menuScan">Escanear Cartão</button>
 </div>
 
 <!-- Tela: Configurar Gabarito -->
@@ -123,14 +121,13 @@
     </label>
 
     <label>Tamanho das bolhas:
-      <!-- (ALTERADO) wrapper inline para não quebrar o "px" -->
       <span class="inline">
         <input type="range" id="bubbleSize" min="14" max="36" value="22">
         <span id="bubbleSizeValue">22</span><span>px</span>
       </span>
     </label>
 
-    <button onclick="printSheet()">Imprimir</button>
+    <button id="printBtn">Imprimir</button>
   </div>
 
   <!-- Área que será impressa -->
@@ -162,7 +159,7 @@
       <input type="text" id="studentNumber" readonly>
     </label>
 
-    <button onclick="exportResults()">Exportar Excel</button>
+    <button id="exportBtn">Exportar Excel</button>
   </div>
 
   <p style="max-width:700px">
@@ -171,13 +168,13 @@
   </p>
 </div>
 
-<!-- (NOVO) Versão fixa na tela (fora do cartão) -->
+<!-- Versão fixa na tela (fora do cartão) -->
 <div id="appVersion">Versão 1.8</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ===================== Versão do código (manual) ===================== */
-const appVersion = "1.8"; // altere manualmente quando atualizar o código
+const appVersion = "1.8";
 /* ==================================================================== */
 
 let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
@@ -186,8 +183,13 @@ let results = [];        // placeholder para resultados de escaneamento
 /* ============================ Navegação ============================== */
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
+
+/* conectar botões das abas (evita problemas com onclick inline) */
+document.getElementById('menuConfig').addEventListener('click', () => showScreen('gabaritoScreen'));
+document.getElementById('menuScan').addEventListener('click', () => showScreen('escaneamentoScreen'));
 /* ==================================================================== */
 
 /* ========================= Configurações UI ========================= */
@@ -198,21 +200,23 @@ const bubbleSizeEl   = document.getElementById('bubbleSize');
 const bubbleSizeVal  = document.getElementById('bubbleSizeValue');
 
 [numQuestionsEl, numOptionsEl, perPageEl].forEach(el => {
-  el.addEventListener('change', updateSheet);
+  if (el) el.addEventListener('change', updateSheet);
 });
-bubbleSizeEl.addEventListener('input', () => {
-  const v = parseInt(bubbleSizeEl.value, 10);
-  bubbleSizeVal.textContent = v;
-  document.documentElement.style.setProperty('--bubble', v + 'px');
-  updateSheet();
-});
+if (bubbleSizeEl) {
+  bubbleSizeEl.addEventListener('input', () => {
+    const v = parseInt(bubbleSizeEl.value, 10);
+    bubbleSizeVal.textContent = v;
+    document.documentElement.style.setProperty('--bubble', v + 'px');
+    updateSheet();
+  });
+}
 /* ==================================================================== */
 
 /* =================== Renderização dos Cartões ======================= */
 function updateSheet() {
-  const numQuestions = parseInt(numQuestionsEl.value, 10);
-  const numOptions   = parseInt(numOptionsEl.value, 10);
-  const perPage      = parseInt(perPageEl.value, 10);
+  const numQuestions = parseInt(numQuestionsEl.value, 10) || 0;
+  const numOptions   = parseInt(numOptionsEl.value, 10) || 4;
+  const perPage      = parseInt(perPageEl.value, 10) || 1;
 
   const container = document.getElementById('sheetContainer');
   container.innerHTML = '';
@@ -251,12 +255,6 @@ function updateSheet() {
       page.appendChild(qDiv);
     }
 
-    // (REMOVIDO) versão dentro do cartão para não afetar a borda
-    // const vTag = document.createElement('div');
-    // vTag.className = 'versionTag';
-    // vTag.textContent = `Versão ${appVersion}`;
-    // page.appendChild(vTag);
-
     container.appendChild(page);
   }
 }
@@ -268,15 +266,24 @@ document.getElementById('fileInput').addEventListener('change', function(e){
   for (let f of files) {
     const reader = new FileReader();
     reader.onload = function(ev){
-      const data = new Uint8Array(ev.target.result);
-      const workbook = XLSX.read(data, { type:'array' });
-      workbook.SheetNames.forEach(sheetName => {
-        const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet);
-        // Espera colunas: Nº | Nome
-        studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
-      });
-      updateClassOptions();
+      try {
+        const data = new Uint8Array(ev.target.result);
+        const workbook = XLSX.read(data, { type:'array' });
+        workbook.SheetNames.forEach(sheetName => {
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          // Mapeia colunas comuns (tenta variantes)
+          studentsData[sheetName] = json.map(r => {
+            const numero = r['Nº'] ?? r['Nr'] ?? r['Nr.'] ?? r['Numero'] ?? r['Número'] ?? r['N'] ?? '';
+            const nome = r['Nome'] ?? r['name'] ?? r['nome'] ?? '';
+            return { numero, nome };
+          });
+        });
+        updateClassOptions();
+      } catch(err){
+        console.error(err);
+        alert('Erro ao ler arquivo. Verifique o formato (XLSX/CSV).');
+      }
     };
     reader.readAsArrayBuffer(f);
   }
@@ -304,7 +311,7 @@ document.getElementById('selectClass').addEventListener('change', function(){
     studentsData[turma].forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.nome;
-      opt.textContent = s.nome;
+      opt.textContent = s.nome || s.numero || '(sem nome)';
       opt.dataset.numero = s.numero ?? '';
       selectStudent.appendChild(opt);
     });
@@ -319,11 +326,9 @@ document.getElementById('selectStudent').addEventListener('change', function(){
 /* ==================================================================== */
 
 /* ======================= Exportar Resultados ======================== */
+document.getElementById('exportBtn').addEventListener('click', exportResults);
 function exportResults(){
-  if (results.length === 0) {
-    alert("Nenhum resultado registrado ainda.");
-    return;
-  }
+  if (results.length === 0) { alert("Nenhum resultado registrado ainda."); return; }
   const ws = XLSX.utils.json_to_sheet(results);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Resultados");
@@ -332,9 +337,8 @@ function exportResults(){
 /* ==================================================================== */
 
 /* ======================= Imprimir apenas cartões ==================== */
-function printSheet(){
-  window.print(); // @media print já isola #printArea
-}
+document.getElementById('printBtn').addEventListener('click', printSheet);
+function printSheet(){ window.print(); } // @media print já isola #printArea
 /* ==================================================================== */
 
 /* ============================== Init ================================ */
