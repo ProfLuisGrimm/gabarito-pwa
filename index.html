@@ -2,299 +2,228 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cartão-Resposta</title>
+  <title>Cartão Resposta</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f4f4f4;
-    }
-
-    /* Container geral */
-    #app {
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    /* Abas */
-    .tabs {
-      display: flex;
-      border-bottom: 2px solid #ccc;
-      margin-bottom: 20px;
-    }
-    .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      background: #eee;
-      border: 1px solid #ccc;
-      border-bottom: none;
-      margin-right: 5px;
-      border-radius: 5px 5px 0 0;
-    }
-    .tab.active {
-      background: #fff;
-      font-weight: bold;
-    }
-    .tab-content {
-      display: none;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 0 5px 5px 5px;
+      background: #f2f2f2;
+      margin: 0;
       padding: 20px;
     }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      background: #eee;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: #ddd;
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
     .tab-content.active {
       display: block;
     }
 
-    /* Configurações */
-    .config-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: inline-block;
-      margin-bottom: 5px;
-      font-weight: bold;
+    .controls {
+      margin-bottom: 20px;
     }
 
-    /* Input inline (bolha + px) */
+    .controls label {
+      margin-right: 10px;
+    }
+
+    .controls input[type="number"] {
+      width: 60px;
+    }
+
     .input-inline {
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
-    .input-inline input {
-      width: 60px;
-    }
 
-    /* Área de cartões */
-    #sheetContainer {
-      display:flex; 
-      flex-wrap:wrap; 
-      gap:10px; 
-      align-items:flex-start;
+    .print-area {
+      display: grid;
+      gap: 20px;
       justify-content: center;
     }
 
     .page {
-      border: 1px solid #000;     /* borda do cartão */
-      background:#fff;
-      position: relative;
+      border: 1px solid #000;
+      background: #fff;
       box-sizing: border-box;
-      padding: 14px;
-      margin: 10px;
+      padding: 15px;
+      margin: 0 auto;
+      width: 18cm;
+      height: 26cm;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      align-items: flex-start;
-    }
-
-    /* tamanhos por quantidade por folha */
-    .layout-1 .page { 
-      width: 18cm;   
-      min-height: 26cm;
-    }
-    .layout-2 .page { 
-      width: 13cm; 
-      min-height: 18cm;
-    }
-    .layout-4 .page { 
-      width: 9cm; 
-      min-height: 13cm;
     }
 
     .header {
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
-      margin-bottom: 20px;
-      width: 100%;
+      margin-bottom: 10px;
+      font-size: 12px;
     }
+
     .header div {
-      margin: 5px 0;
+      flex: 1;
     }
+
     .questions {
-      width: 100%;
+      flex-grow: 1;
     }
+
     .question {
-      display: flex;
-      align-items: center;
-      margin: 5px 0;
+      margin: 4px 0;
     }
-    .question-number {
-      width: 30px;
+
+    .bubbles {
+      display: inline-flex;
+      gap: 8px;
+      margin-left: 10px;
     }
-    .options {
-      display: flex;
-      gap: 10px;
-    }
-    .option {
+
+    .bubble {
       display: flex;
       align-items: center;
       justify-content: center;
       border: 1px solid #000;
       border-radius: 50%;
       font-size: 12px;
-      width: var(--bubble-size, 25px);
-      height: var(--bubble-size, 25px);
-    }
-    .footer {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      font-size: 10px;
     }
 
-    /* Impressão */
+    /* contador da versão fixo fora do cartão */
+    #version {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 12px;
+      color: #333;
+    }
+
     @media print {
-      body { margin:0; padding:0; background:#fff; }
-      body * { visibility: hidden !important; }
-      #printArea, #printArea * { visibility: visible !important; }
-      #printArea { 
-        position: absolute; 
-        left:0; top:0; 
-        width:100%; 
-        margin: 1cm;   /* margem da folha impressa */
+      body {
+        background: #fff;
       }
-      .page {
-        page-break-inside: avoid; 
-        border: 1px solid #000;  
+      .tabs, .controls, button {
+        display: none;
+      }
+      #version {
+        position: fixed;
+        bottom: 5px;
+        right: 10px;
       }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div class="tabs">
-      <div class="tab active" data-tab="config">Configurações</div>
-      <div class="tab" data-tab="preview">Visualizar</div>
-    </div>
-
-    <!-- Aba de Configuração -->
-    <div id="config" class="tab-content active">
-      <div class="config-group">
-        <label for="questions">Número de questões:</label>
-        <input type="number" id="questions" value="10" min="5" max="100">
-      </div>
-      <div class="config-group">
-        <label for="options">Opções por questão:</label>
-        <select id="options">
-          <option value="5">5 (A-E)</option>
-          <option value="4">4 (A-D)</option>
-          <option value="3">3 (A-C)</option>
-        </select>
-      </div>
-      <div class="config-group">
-        <label for="layout">Cartões por folha:</label>
-        <select id="layout">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="4">4</option>
-        </select>
-      </div>
-      <div class="config-group">
-        <label for="bubbleSize">Tamanho da bolha:</label>
-        <span class="input-inline">
-          <input type="number" id="bubbleSize" value="25" min="10" max="60"> px
-        </span>
-      </div>
-      <button id="generate">Gerar Cartões</button>
-      <button id="print">Imprimir</button>
-    </div>
-
-    <!-- Aba de Visualização -->
-    <div id="preview" class="tab-content">
-      <div id="printArea">
-        <div id="sheetContainer" class="layout-1"></div>
-      </div>
-    </div>
+  <div class="tabs">
+    <div class="tab-button active" data-tab="gabarito">Gabarito</div>
+    <div class="tab-button" data-tab="config">Configurações</div>
   </div>
 
+  <!-- Aba Gabarito -->
+  <div id="gabarito" class="tab-content active">
+    <div class="print-area" id="printArea">
+      <div class="page">
+        <div class="header">
+          <div>Nome: ________________________</div>
+          <div>Nº: ______</div>
+        </div>
+        <div class="header">
+          <div>Turma: ________________________</div>
+          <div>Data: ____/____/______</div>
+        </div>
+        <div class="questions" id="questions"></div>
+      </div>
+    </div>
+    <button onclick="printDiv()">Imprimir</button>
+  </div>
+
+  <!-- Aba Configurações -->
+  <div id="config" class="tab-content">
+    <div class="controls">
+      <label for="numQuestions">Número de questões:</label>
+      <input type="number" id="numQuestions" value="10" min="1" max="100">
+
+      <label for="bubbleSize">Tamanho da bolha:</label>
+      <span class="input-inline">
+        <input type="number" id="bubbleSize" value="25" min="10" max="60"> px
+      </span>
+    </div>
+    <button onclick="generateQuestions()">Atualizar Gabarito</button>
+  </div>
+
+  <!-- contador da versão fora do cartão -->
+  <div id="version">Versão 1.10</div>
+
   <script>
-    // Troca de abas
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
+    const tabs = document.querySelectorAll(".tab-button");
+    const contents = document.querySelectorAll(".tab-content");
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        contents.forEach(c => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
       });
     });
 
-    // Função para criar um cartão
-    function criarCartao(numQuestions, numOptions, bubbleSize) {
-      const page = document.createElement('div');
-      page.className = 'page';
-      page.style.setProperty('--bubble-size', bubbleSize);
+    function generateQuestions() {
+      const numQuestions = document.getElementById("numQuestions").value;
+      const bubbleSize = document.getElementById("bubbleSize").value;
+      const questionsDiv = document.getElementById("questions");
+      questionsDiv.innerHTML = "";
 
-      // Cabeçalho
-      const header = document.createElement('div');
-      header.className = 'header';
-      header.innerHTML = `
-        <div>Nome: ___________________________</div>
-        <div>Nº: ______</div>
-        <div>Turma: ____________</div>
-        <div>Data: ____/____/______</div>
-      `;
-      page.appendChild(header);
-
-      // Questões
-      const questionsDiv = document.createElement('div');
-      questionsDiv.className = 'questions';
       for (let i = 1; i <= numQuestions; i++) {
-        const q = document.createElement('div');
-        q.className = 'question';
+        const qDiv = document.createElement("div");
+        qDiv.className = "question";
+        qDiv.innerHTML = `${i}. `;
 
-        const qNum = document.createElement('div');
-        qNum.className = 'question-number';
-        qNum.textContent = i + '.';
-        q.appendChild(qNum);
+        const bubblesDiv = document.createElement("div");
+        bubblesDiv.className = "bubbles";
 
-        const optionsDiv = document.createElement('div');
-        optionsDiv.className = 'options';
-        for (let j = 0; j < numOptions; j++) {
-          const option = document.createElement('div');
-          option.className = 'option';
-          option.textContent = String.fromCharCode(65 + j);
-          optionsDiv.appendChild(option);
-        }
-        q.appendChild(optionsDiv);
-        questionsDiv.appendChild(q);
+        ["A","B","C","D","E"].forEach(letter => {
+          const b = document.createElement("div");
+          b.className = "bubble";
+          b.style.width = bubbleSize + "px";
+          b.style.height = bubbleSize + "px";
+          b.textContent = letter;
+          bubblesDiv.appendChild(b);
+        });
+
+        qDiv.appendChild(bubblesDiv);
+        questionsDiv.appendChild(qDiv);
       }
-      page.appendChild(questionsDiv);
-
-      // Rodapé
-      const footer = document.createElement('div');
-      footer.className = 'footer';
-      footer.textContent = 'Versão 1.0';
-      page.appendChild(footer);
-
-      return page;
     }
 
-    // Gerar cartões
-    document.getElementById('generate').addEventListener('click', () => {
-      const numQuestions = parseInt(document.getElementById('questions').value, 10);
-      const numOptions = parseInt(document.getElementById('options').value, 10);
-      const layout = document.getElementById('layout').value;
-      const bubbleSize = document.getElementById('bubbleSize').value + 'px';
-
-      const sheetContainer = document.getElementById('sheetContainer');
-      sheetContainer.className = 'layout-' + layout;
-      sheetContainer.innerHTML = '';
-
-      const qtdCartoes = parseInt(layout, 10);
-      for (let i = 0; i < qtdCartoes; i++) {
-        sheetContainer.appendChild(criarCartao(numQuestions, numOptions, bubbleSize));
-      }
-
-      // Trocar para aba de preview
-      document.querySelector('.tab[data-tab="preview"]').click();
-    });
-
-    // Botão imprimir
-    document.getElementById('print').addEventListener('click', () => {
+    function printDiv() {
+      const printContents = document.getElementById("printArea").innerHTML;
+      const originalContents = document.body.innerHTML;
+      document.body.innerHTML = printContents;
       window.print();
-    });
+      document.body.innerHTML = originalContents;
+      location.reload();
+    }
+
+    // gerar inicial
+    generateQuestions();
   </script>
 </body>
 </html>
