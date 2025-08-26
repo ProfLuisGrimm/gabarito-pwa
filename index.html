@@ -1,344 +1,45 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Gabarito Digital</title>
-<style>
-  :root {
-    --bubble: 22px; /* inicial, será atualizado pelo slider */
-  }
-
-  body { font-family: Arial, sans-serif; margin: 16px; }
-
-  /* Navegação */
-  .menu { display:flex; gap:8px; margin-bottom:12px; }
-  .menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
-  #exitBtn {
-    position: fixed; top:10px; right:10px; z-index:1000;
-    padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px;
-    font-weight:700; cursor:pointer; font-size:14px;
-  }
-
-  /* Telas */
-  .screen { display:none; }
-  .screen.active { display:block; }
-
-  /* Controles */
-  .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-  .controls label { display:flex; flex-direction:column; font-size:14px; }
-  /* manter valor + "px" na mesma linha */
-  .controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-
-  /* Área de cartões */
-  #printArea { display:block; }
-  #sheetContainer {
-    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;
-  }
-  .page {
-    border: 2px solid #000;     /* borda do cartão */
-    display: inline-block;      /* acompanha o conteúdo */
-    padding: 14px;
-    background:#fff;
-    box-sizing: border-box;
-  }
-  /* tamanhos por quantidade por folha */
-  .layout-1 .page { width: auto; }            /* <- ajuste da borda */
-  .layout-2 .page { width: calc(50% - 5px); }
-  .layout-4 .page { width: calc(50% - 5px); }
-
-  /* Cabeçalho do cartão */
-  .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.8; }
-  .nowrap { white-space: nowrap; }
-
-  /* Questões/bolhas */
-  .question { margin-bottom: 8px; font-size: 14px; }
-  .opt {
-    display:inline-flex;
-    width: var(--bubble);
-    height: var(--bubble);
-    border: 1.6px solid #000;
-    border-radius: 50%;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    margin-right:8px;
-    user-select:none;
-  }
-
-  /* Versão FIXA na TELA (fora do cartão) */
-  #appVersion {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    font-size: 12px;
-    color: #666;
-    z-index: 1000;
-    pointer-events: none;
-  }
-
-  /* Impressão: só os cartões */
-  @media print {
-    body * { visibility: hidden !important; }
-    #printArea, #printArea * { visibility: visible !important; }
-    #printArea { position: absolute; left:0; top:0; width:100%; }
-    .page { border: 1px solid #000; } /* se quiser sem borda, comente esta linha */
-    /* esconder elementos de UI e a versão na impressão */
-    .menu, .controls, #exitBtn, #appVersion { display:none !important; }
-  }
-</style>
-</head>
-<body>
-
-<button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ×</button>
-
-<div class="menu">
-  <button onclick="showScreen('gabaritoScreen')">Configurar Gabarito</button>
-  <button onclick="showScreen('escaneamentoScreen')">Escanear Cartão</button>
-</div>
-
-<!-- Tela: Configurar Gabarito -->
-<div id="gabaritoScreen" class="screen active">
-  <div class="controls">
-    <label>Quantidade de questões:
-      <input type="number" id="numQuestions" value="10" min="1" max="60">
-    </label>
-
-    <label>Alternativas:
-      <select id="numOptions">
-        <option value="4" selected>4 (A–D)</option>
-        <option value="5">5 (A–E)</option>
-      </select>
-    </label>
-
-    <label>Gabaritos por folha:
-      <select id="perPage">
-        <option value="1" selected>1</option>
-        <option value="2">2</option>
-        <option value="4">4</option>
-      </select>
-    </label>
-
-    <label>Tamanho das bolhas:
-      <span class="inline">
-        <input type="range" id="bubbleSize" min="14" max="36" value="22">
-        <span id="bubbleSizeValue">22</span><span>px</span>
-      </span>
-    </label>
-
-    <button onclick="printSheet()">Imprimir</button>
-  </div>
-
-  <!-- Área que será impressa -->
-  <div id="printArea">
-    <div id="sheetContainer" class="layout-1"></div>
-  </div>
-</div>
-
-<!-- Tela: Escanear Cartão -->
-<div id="escaneamentoScreen" class="screen">
-  <div class="controls">
-    <label>Upload das turmas (Excel .xlsx ou .csv):
-      <input type="file" id="fileInput" multiple>
-    </label>
-
-    <label>Turma:
-      <select id="selectClass">
-        <option value="">-- Selecione --</option>
-      </select>
-    </label>
-
-    <label>Aluno:
-      <select id="selectStudent">
-        <option value="">-- Selecione --</option>
-      </select>
-    </label>
-
-    <label>Nº do aluno:
-      <input type="text" id="studentNumber" readonly>
-    </label>
-
-    <button onclick="exportResults()">Exportar Excel</button>
-  </div>
-
-  <p style="max-width:700px">
-    (Próximo passo) Aqui entra o escaneamento por câmera com confirmação visual e gravação automática.  
-    Por enquanto, você já consegue selecionar Turma/Aluno e exportar resultados simulados.
-  </p>
-</div>
-
-<!-- Versão fixa na tela (fora do cartão) -->
-<div id="appVersion">Versão 1.8</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-/* ===================== Versão do código (manual) ===================== */
-const appVersion = "1.8"; // altere manualmente quando atualizar o código
-/* ==================================================================== */
-
-let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
-let results = [];        // placeholder para resultados de escaneamento
-
-/* ============================ Navegação ============================== */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-/* ==================================================================== */
-
-/* ========================= Configurações UI ========================= */
-const numQuestionsEl = document.getElementById('numQuestions');
-const numOptionsEl   = document.getElementById('numOptions');
-const perPageEl      = document.getElementById('perPage');
-const bubbleSizeEl   = document.getElementById('bubbleSize');
-const bubbleSizeVal  = document.getElementById('bubbleSizeValue');
-
-[numQuestionsEl, numOptionsEl, perPageEl].forEach(el => {
-  el.addEventListener('change', updateSheet);
-});
-bubbleSizeEl.addEventListener('input', () => {
-  const v = parseInt(bubbleSizeEl.value, 10);
-  bubbleSizeVal.textContent = v;
-  document.documentElement.style.setProperty('--bubble', v + 'px');
-  updateSheet();
-});
-/* ==================================================================== */
-
-/* =================== Renderização dos Cartões ======================= */
-function updateSheet() {
-  const numQuestions = parseInt(numQuestionsEl.value, 10);
-  const numOptions   = parseInt(numOptionsEl.value, 10);
-  const perPage      = parseInt(perPageEl.value, 10);
-
-  const container = document.getElementById('sheetContainer');
-  container.innerHTML = '';
-  container.classList.remove('layout-1','layout-2','layout-4');
-  container.classList.add(`layout-${perPage}`);
-
-  for (let i = 0; i < perPage; i++) {
-    const page = document.createElement('div');
-    page.className = 'page';
-
-    // Cabeçalho com underscores literais
-    const header = document.createElement('div');
-    header.className = 'headerCard';
-    header.innerHTML = `
-      <div>
-        Nome: <span class="nowrap">______________________________</span>
-        &nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span>
-      </div>
-      <div>
-        Turma: <span class="nowrap">____________</span>
-        &nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span>
-      </div>
-    `;
-    page.appendChild(header);
-
-    // Questões e opções (bolhas desenhadas via CSS)
-    for (let q = 1; q <= numQuestions; q++) {
-      const qDiv = document.createElement('div');
-      qDiv.className = 'question';
-      let opts = '';
-      for (let o = 0; o < numOptions; o++) {
-        const letter = String.fromCharCode(65 + o);
-        opts += `<span class="opt" data-q="${q}" data-opt="${letter}">${letter}</span>`;
-      }
-      qDiv.innerHTML = `${q}. ${opts}`;
-      page.appendChild(qDiv);
-    }
-
-    // (REMOVIDO) versão dentro do cartão
-    // const vTag = document.createElement('div');
-    // vTag.className = 'versionTag';
-    // vTag.textContent = `Versão ${appVersion}`;
-    // page.appendChild(vTag);
-
-    container.appendChild(page);
-  }
-}
-/* ==================================================================== */
-
-/* ===================== Upload Excel (Turmas) ======================== */
-document.getElementById('fileInput').addEventListener('change', function(e){
-  const files = e.target.files;
-  for (let f of files) {
-    const reader = new FileReader();
-    reader.onload = function(ev){
-      const data = new Uint8Array(ev.target.result);
-      const workbook = XLSX.read(data, { type:'array' });
-      workbook.SheetNames.forEach(sheetName => {
-        const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet);
-        // Espera colunas: Nº | Nome
-        studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
-      });
-      updateClassOptions();
-    };
-    reader.readAsArrayBuffer(f);
-  }
-});
-
-function updateClassOptions(){
-  const selectClass = document.getElementById('selectClass');
-  selectClass.innerHTML = '<option value="">-- Selecione --</option>';
-  Object.keys(studentsData).forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    selectClass.appendChild(opt);
-  });
-
-  // limpa seleções
-  document.getElementById('selectStudent').innerHTML = '<option value="">-- Selecione --</option>';
-  document.getElementById('studentNumber').value = '';
-}
-
-document.getElementById('selectClass').addEventListener('change', function(){
-  const turma = this.value;
-  const selectStudent = document.getElementById('selectStudent');
-  selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
-  if (studentsData[turma]) {
-    studentsData[turma].forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.nome;
-      opt.textContent = s.nome;
-      opt.dataset.numero = s.numero ?? '';
-      selectStudent.appendChild(opt);
-    });
-  }
-  document.getElementById('studentNumber').value = '';
-});
-
-document.getElementById('selectStudent').addEventListener('change', function(){
-  const numero = this.selectedOptions[0]?.dataset?.numero || '';
-  document.getElementById('studentNumber').value = numero;
-});
-/* ==================================================================== */
-
-/* ======================= Exportar Resultados ======================== */
-function exportResults(){
-  if (results.length === 0) {
-    alert("Nenhum resultado registrado ainda.");
-    return;
-  }
-  const ws = XLSX.utils.json_to_sheet(results);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
-  XLSX.writeFile(wb, "Resultados.xlsx");
-}
-/* ==================================================================== */
-
-/* ======================= Imprimir apenas cartões ==================== */
-function printSheet(){
-  window.print(); // @media print já isola #printArea
-}
-/* ==================================================================== */
-
-/* ============================== Init ================================ */
-document.documentElement.style.setProperty('--bubble', bubbleSizeEl.value + 'px');
-document.getElementById('bubbleSizeValue').textContent = bubbleSizeEl.value;
-document.getElementById('appVersion').textContent = `Versão ${appVersion}`;
-updateSheet();
-/* ==================================================================== */
-</script>
-</body>
+<!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8"> <title>Gerador de
+Gabaritos</title> <style> body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+.tabs { margin-bottom: 20px; } .tab-button { padding: 10px 20px; border: none; cursor: pointer;
+background: #ccc; margin-right: 5px; } .tab-button.active { background: #666; color: #fff; }
+.tab-content { display: none; background: #fff; padding: 20px; border: 1px solid #ccc; }
+.tab-content.active { display: block; } #print-area { display: flex; flex-wrap: wrap; gap: 10px;
+justify-content: center; } .page { background: #fff; border: 1px solid #000; box-sizing: border-box;
+margin: 10px; padding: 10px; display: inline-block; vertical-align: top; } .bubbles { display: grid;
+grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; } .bubble { width:
+var(--bubble-size, 20px); height: var(--bubble-size, 20px); border: 1px solid #000; border-radius:
+50%; display: flex; align-items: center; justify-content: center; font-size: 10px; } /* tamanhos por
+quantidade por folha */ .layout-1 .page { width: auto; } .layout-2 .page { width: calc(50% - 5px); }
+.layout-4 .page { width: calc(50% - 5px); } #version { position: fixed; bottom: 10px; right: 10px;
+font-size: 12px; color: #333; } .slider-container { display: flex; align-items: center; gap: 5px; }
+</style> </head> <body> <div class="tabs"> <button class="tab-button active"
+onclick="openTab(event, 'config')">Configuração</button> <button class="tab-button"
+onclick="openTab(event, 'preview')">Pré-visualização</button> </div> <div id="config"
+class="tab-content active"> <h2>Configurações do Gabarito</h2> <label>Quantidade de
+Questões: <input type="number" id="questions" value="10" min="1"></label><br><br>
+<label>Cartões por Página: <select id="layout"> <option value="1">1</option> <option
+value="2">2</option> <option value="4">4</option> </select> </label><br><br> <div
+class="slider-container"> <label>Tamanho das bolhas: </label> <input type="range"
+id="bubbleSize" min="10" max="40" value="20" oninput="updateBubbleSize(this.value)"> <span
+id="bubbleValue">20</span><span>px</span> </div><br> <button onclick="generate()">Gerar
+Gabaritos</button> <button onclick="printGabaritos()">Imprimir</button> </div> <div id="preview"
+class="tab-content"> <h2>Pré-visualização</h2> <div id="print-area"></div> </div> <div
+id="version">Versão 1.0</div> <script> function openTab(evt, tabId) {
+document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); }
+function updateBubbleSize(value) { document.documentElement.style.setProperty('--bubble-size',
+value + 'px'); document.getElementById('bubbleValue').textContent = value; } function generate() {
+const numQuestions = document.getElementById('questions').value; const layout =
+document.getElementById('layout').value; const printArea = document.getElementById('print-area');
+printArea.innerHTML = ''; printArea.className = 'layout-' + layout; for (let i = 0; i < layout; i++) {
+const page = document.createElement('div'); page.className = 'page'; for (let q = 1; q <=
+numQuestions; q++) { const question = document.createElement('div'); question.textContent = q +
+'.'; const bubbles = document.createElement('div'); bubbles.className = 'bubbles';
+['A','B','C','D','E'].forEach(letter => { const bubble = document.createElement('div');
+bubble.className = 'bubble'; bubble.textContent = letter; bubbles.appendChild(bubble); });
+question.appendChild(bubbles); page.appendChild(question); } printArea.appendChild(page); } }
+function printGabaritos() { const printContents = document.getElementById('print-area').innerHTML;
+const originalContents = document.body.innerHTML; document.body.innerHTML = printContents;
+window.print(); document.body.innerHTML = originalContents; location.reload(); } </script> </body>
 </html>
