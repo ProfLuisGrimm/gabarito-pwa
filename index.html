@@ -6,208 +6,85 @@
 <title>Gabarito Digital — Completo</title>
 <link rel="icon" href="data:;base64,=">
 <style>
-  :root { --bubble: 22px; }
-
-  /* Reset/base */
-  * { box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#222; }
-
-  /* Header / actions */
-  .menu { display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
-  .menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
-  #exitBtn {
-    position: fixed; top:10px; right:10px; z-index:1000;
-    padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px;
-    font-weight:700; cursor:pointer; font-size:14px;
-  }
-
-  /* Screens */
-  .screen { display:none; }
-  .screen.active { display:block; }
-
-  /* Controls */
-  .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-  .controls label { display:flex; flex-direction:column; font-size:14px; }
-  .controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-  .controls input[type="number"] { width: 70px; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
-
-  /* Print / sheet area */
-  #printArea { display:block; }
-  #sheetContainer { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
-  .page {
-    border: 2px solid #000;
-    display: inline-block;
-    padding: 14px;
-    background:#fff;
-    box-sizing: border-box;
-  }
-  .layout-1 .page { width: auto; }
-  .layout-2 .page { width: calc(50% - 5px); }
-  .layout-4 .page { width: calc(50% - 5px); }
-
-  .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
-  .nowrap { white-space: nowrap; }
-
-  .question { margin-bottom: 8px; font-size: 14px; }
-  .opt {
-    display:inline-flex;
-    width: var(--bubble);
-    height: var(--bubble);
-    border: 1.6px solid #000;
-    border-radius: 50%;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    margin-right:8px;
-    user-select:none;
-  }
-
-  /* Version */
-  #appVersion {
-    position: fixed; right: 10px; bottom: 10px; font-size: 12px; color: #666; z-index:1000; pointer-events: none;
-  }
-
-  /* Scanning area */
-  #videoWrap { position: relative; display:inline-block; border:1px solid #ccc; }
-  #videoElement { width: 640px; height: 480px; background:#000; display:block; }
-  #overlayCanvas { position:absolute; left:0; top:0; pointer-events:none; }
-
-  .scanControls { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
-  .small { font-size:13px; padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid #bbb; background:#fff; }
-
-  /* results box */
-  #resultsList { max-height:300px; overflow:auto; border:1px dashed #ccc; padding:8px; background:#fafafa; }
-
-  /* Responsive tweaks */
-  @media (max-width:800px) {
-    #videoElement { width: 320px; height: 240px; }
-  }
-
-  /* Print rules */
-  @media print {
-    body * { visibility: hidden !important; }
-    #printArea, #printArea * { visibility: visible !important; }
-    #printArea { position: absolute; left:0; top:0; width:100%; }
-    .page { border: 1px solid #000; }
-    .menu, .controls, #exitBtn, #appVersion { display:none !important; }
-  }
+:root { --bubble: 22px; }
+* { box-sizing: border-box; }
+body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#222; }
+.menu { display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
+.menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
+#exitBtn { position: fixed; top:10px; right:10px; z-index:1000; padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px; font-weight:700; cursor:pointer; font-size:14px; }
+.screen { display:none; }
+.screen.active { display:block; }
+.controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.controls label { display:flex; flex-direction:column; font-size:14px; }
+.controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.controls input[type="number"] { width: 70px; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
+#printArea { display:block; }
+#sheetContainer { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
+.page { border: 2px solid #000; display: inline-block; padding: 14px; background:#fff; box-sizing: border-box; }
+.layout-1 .page { width: auto; }
+.layout-2 .page { width: calc(50% - 5px); }
+.layout-4 .page { width: calc(50% - 5px); }
+.headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
+.nowrap { white-space: nowrap; }
+.question { margin-bottom: 8px; font-size: 14px; }
+.opt { display:inline-flex; width: var(--bubble); height: var(--bubble); border: 1.6px solid #000; border-radius: 50%; align-items:center; justify-content:center; font-weight:700; margin-right:8px; user-select:none; }
+#appVersion { position: fixed; right: 10px; bottom: 10px; font-size: 12px; color: #666; z-index:1000; pointer-events: none; }
+#videoWrap { position: relative; display:inline-block; border:1px solid #ccc; }
+#videoElement { width: 640px; height: 480px; background:#000; display:block; }
+#overlayCanvas { position:absolute; left:0; top:0; pointer-events:none; }
+.scanControls { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+.small { font-size:13px; padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid #bbb; background:#fff; }
+#resultsList { max-height:300px; overflow:auto; border:1px dashed #ccc; padding:8px; background:#fafafa; }
+@media (max-width:800px) { #videoElement { width: 320px; height: 240px; } }
+@media print { body * { visibility: hidden !important; } #printArea, #printArea * { visibility: visible !important; } #printArea { position: absolute; left:0; top:0; width:100%; } .page { border: 1px solid #000; } .menu, .controls, #exitBtn, #appVersion { display:none !important; } }
 </style>
 </head>
 <body>
-
 <button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ×</button>
-
 <div class="menu">
   <button onclick="showScreen('gabaritoScreen')">Configurar Gabarito</button>
   <button onclick="showScreen('escaneamentoScreen')">Escanear Cartão</button>
   <div style="flex:1"></div>
   <div class="inline"><strong>Versão</strong>&nbsp;<span id="appVerSmall">1.10</span></div>
 </div>
-
-<!-- Tela: Configurar Gabarito -->
 <div id="gabaritoScreen" class="screen active">
   <div class="controls">
-    <label>Quantidade de questões:
-      <input type="number" id="numQuestions" value="10" min="1" max="60">
-    </label>
-
-    <label>Alternativas:
-      <select id="numOptions">
-        <option value="4" selected>4 (A–D)</option>
-        <option value="5">5 (A–E)</option>
-      </select>
-    </label>
-
-    <label>Gabaritos por folha:
-      <select id="perPage">
-        <option value="1" selected>1</option>
-        <option value="2">2</option>
-        <option value="4">4</option>
-      </select>
-    </label>
-
-    <label>Tamanho das bolhas:
-      <span class="inline">
-        <input type="range" id="bubbleSize" min="14" max="36" value="22">
-        <span id="bubbleSizeValue" style="display:inline-block; min-width:28px; text-align:right;">22</span><span style="margin-left:4px;">px</span>
-      </span>
-    </label>
-
+    <label>Quantidade de questões:<input type="number" id="numQuestions" value="10" min="1" max="60"></label>
+    <label>Alternativas:<select id="numOptions"><option value="4" selected>4 (A–D)</option><option value="5">5 (A–E)</option></select></label>
+    <label>Gabaritos por folha:<select id="perPage"><option value="1" selected>1</option><option value="2">2</option><option value="4">4</option></select></label>
+    <label>Tamanho das bolhas:<span class="inline"><input type="range" id="bubbleSize" min="14" max="36" value="22"><span id="bubbleSizeValue" style="display:inline-block; min-width:28px; text-align:right;">22</span><span style="margin-left:4px;">px</span></span></label>
     <button onclick="printSheet()">Imprimir</button>
   </div>
-
-  <!-- Área que será impressa -->
-  <div id="printArea">
-    <div id="sheetContainer" class="layout-1"></div>
-  </div>
+  <div id="printArea"><div id="sheetContainer" class="layout-1"></div></div>
 </div>
-
-<!-- Tela: Escanear Cartão -->
 <div id="escaneamentoScreen" class="screen">
   <div class="controls">
-    <label>Upload das turmas (Excel .xlsx ou .csv):
-      <input type="file" id="fileInput" multiple>
-    </label>
-
-    <label>Turma:
-      <select id="selectClass">
-        <option value="">-- Selecione --</option>
-      </select>
-    </label>
-
-    <label>Aluno:
-      <select id="selectStudent">
-        <option value="">-- Selecione --</option>
-      </select>
-    </label>
-
-    <label>Nº do aluno:
-      <input type="text" id="studentNumber" readonly>
-    </label>
-
+    <label>Upload das turmas (Excel .xlsx ou .csv):<input type="file" id="fileInput" multiple></label>
+    <label>Turma:<select id="selectClass"><option value="">-- Selecione --</option></select></label>
+    <label>Aluno:<select id="selectStudent"><option value="">-- Selecione --</option></select></label>
+    <label>Nº do aluno:<input type="text" id="studentNumber" readonly></label>
     <button onclick="exportResults()">Exportar Excel</button>
   </div>
-
   <div style="display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start;">
     <div>
       <div id="videoWrap">
         <video id="videoElement" autoplay playsinline></video>
         <canvas id="overlayCanvas"></canvas>
       </div>
-
       <div class="scanControls">
         <button class="small" id="startCamBtn">Iniciar Câmera</button>
         <button class="small" id="stopCamBtn" disabled>Parar Câmera</button>
         <button class="small" id="captureBtn" disabled>Capturar / Detectar</button>
-
-        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">
-          Auto-scan:
-          <input type="checkbox" id="autoScan" style="transform: scale(1.1); margin-left:6px;">
-        </label>
-
-        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">
-          Limiar:
-          <input type="range" id="threshSlider" min="0" max="255" value="140" style="margin-left:6px;">
-          <span id="threshVal" style="min-width:30px; display:inline-block; text-align:right;">140</span>
-        </label>
+        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">Auto-scan:<input type="checkbox" id="autoScan" style="transform: scale(1.1); margin-left:6px;"></label>
+        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">Limiar:<input type="range" id="threshSlider" min="0" max="255" value="140" style="margin-left:6px;"><span id="threshVal" style="min-width:30px; display:inline-block; text-align:right;">140</span></label>
       </div>
-
       <div style="margin-top:8px;">
-        <label class="small">Posição X:
-          <input type="range" id="boxX" min="0" max="100" value="10">
-        </label>
-        <label class="small">Posição Y:
-          <input type="range" id="boxY" min="0" max="100" value="10">
-        </label>
-        <label class="small">Largura %:
-          <input type="range" id="boxW" min="20" max="100" value="80">
-        </label>
-        <label class="small">Altura %:
-          <input type="range" id="boxH" min="20" max="100" value="80">
-        </label>
+        <label class="small">Posição X:<input type="range" id="boxX" min="0" max="100" value="10"></label>
+        <label class="small">Posição Y:<input type="range" id="boxY" min="0" max="100" value="10"></label>
+        <label class="small">Largura %:<input type="range" id="boxW" min="20" max="100" value="80"></label>
+        <label class="small">Altura %:<input type="range" id="boxH" min="20" max="100" value="80"></label>
       </div>
     </div>
-
     <div style="max-width:460px;">
       <p><strong>Instruções rápidas:</strong></p>
       <ol>
@@ -217,443 +94,32 @@
         <li>Ajuste o limiar se houver muito brilho/sombra.</li>
         <li>Clique <em>Capturar / Detectar</em>. Resultado será salvo em memória (veja lista abaixo).</li>
       </ol>
-
       <h4>Resultados detectados (últimos scans)</h4>
       <div id="resultsList"></div>
     </div>
   </div>
-
-  <p style="max-width:700px; margin-top:18px">
-    (Próximo passo) Podemos depois adicionar captura automática em lote e calibração por foto de referência.
-  </p>
+  <p style="max-width:700px; margin-top:18px">(Próximo passo) Podemos depois adicionar captura automática em lote e calibração por foto de referência.</p>
 </div>
-
 <div id="appVersion">Versão 1.10</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-/* ===================== Versão do código (manual) ===================== */
 const appVersion = "1.10";
-/* ==================================================================== */
-
-let studentsData = {};   // { "Turma A": [ {numero, nome}, ... ] }
-let results = [];        // resultados de escaneamento (objetos)
-
-/* ============================ Navegação ============================== */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-/* ==================================================================== */
-
-/* ========================= Configurações UI ========================= */
-const numQuestionsEl = document.getElementById('numQuestions');
-const numOptionsEl   = document.getElementById('numOptions');
-const perPageEl      = document.getElementById('perPage');
-const bubbleSizeEl   = document.getElementById('bubbleSize');
-const bubbleSizeVal  = document.getElementById('bubbleSizeValue');
-
-[numQuestionsEl, numOptionsEl, perPageEl].forEach(el => {
-  el.addEventListener('change', updateSheet);
-});
-bubbleSizeEl.addEventListener('input', () => {
-  const v = parseInt(bubbleSizeEl.value, 10);
-  bubbleSizeVal.textContent = v;
-  document.documentElement.style.setProperty('--bubble', v + 'px');
-  updateSheet();
-});
-/* ==================================================================== */
-
-/* =================== Renderização dos Cartões ======================= */
-function updateSheet() {
-  const numQuestions = parseInt(numQuestionsEl.value, 10);
-  const numOptions   = parseInt(numOptionsEl.value, 10);
-  const perPage      = parseInt(perPageEl.value, 10);
-
-  const container = document.getElementById('sheetContainer');
-  container.innerHTML = '';
-  container.classList.remove('layout-1','layout-2','layout-4');
-  container.classList.add(`layout-${perPage}`);
-
-  for (let i = 0; i < perPage; i++) {
-    const page = document.createElement('div');
-    page.className = 'page';
-
-    // Cabeçalho
-    const header = document.createElement('div');
-    header.className = 'headerCard';
-    header.innerHTML = `
-      <div>
-        Nome: <span class="nowrap">______________________________</span>
-        &nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span>
-      </div>
-      <div>
-        Turma: <span class="nowrap">____________</span>
-        &nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span>
-      </div>
-    `;
-    page.appendChild(header);
-
-    // Questões e opções (bolhas desenhadas via CSS)
-    for (let q = 1; q <= numQuestions; q++) {
-      const qDiv = document.createElement('div');
-      qDiv.className = 'question';
-      let opts = '';
-      for (let o = 0; o < numOptions; o++) {
-        const letter = String.fromCharCode(65 + o);
-        opts += `<span class="opt" data-q="${q}" data-opt="${letter}">${letter}</span>`;
-      }
-      qDiv.innerHTML = `${q}. ${opts}`;
-      page.appendChild(qDiv);
-    }
-
-    container.appendChild(page);
-  }
-}
-/* ==================================================================== */
-
-/* ===================== Upload Excel (Turmas) ======================== */
-document.getElementById('fileInput').addEventListener('change', function(e){
-  const files = e.target.files;
-  for (let f of files) {
-    const reader = new FileReader();
-    reader.onload = function(ev){
-      const data = new Uint8Array(ev.target.result);
-      const workbook = XLSX.read(data, { type:'array' });
-      workbook.SheetNames.forEach(sheetName => {
-        const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet);
-        // Espera colunas: Nº | Nome
-        studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
-      });
-      updateClassOptions();
-    };
-    reader.readAsArrayBuffer(f);
-  }
-});
-
-function updateClassOptions(){
-  const selectClass = document.getElementById('selectClass');
-  selectClass.innerHTML = '<option value="">-- Selecione --</option>';
-  Object.keys(studentsData).forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    selectClass.appendChild(opt);
-  });
-
-  // limpa seleções
-  document.getElementById('selectStudent').innerHTML = '<option value="">-- Selecione --</option>';
-  document.getElementById('studentNumber').value = '';
-}
-
-document.getElementById('selectClass').addEventListener('change', function(){
-  const turma = this.value;
-  const selectStudent = document.getElementById('selectStudent');
-  selectStudent.innerHTML = '<option value="">-- Selecione --</option>';
-  if (studentsData[turma]) {
-    studentsData[turma].forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.nome;
-      opt.textContent = s.nome;
-      opt.dataset.numero = s.numero ?? '';
-      selectStudent.appendChild(opt);
-    });
-  }
-  document.getElementById('studentNumber').value = '';
-});
-
-document.getElementById('selectStudent').addEventListener('change', function(){
-  const numero = this.selectedOptions[0]?.dataset?.numero || '';
-  document.getElementById('studentNumber').value = numero;
-});
-/* ==================================================================== */
-
-/* ======================= Exportar Resultados ======================== */
-function exportResults(){
-  if (results.length === 0) {
-    alert("Nenhum resultado registrado ainda.");
-    return;
-  }
-  const ws = XLSX.utils.json_to_sheet(results);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
-  XLSX.writeFile(wb, "Resultados.xlsx");
-}
-/* ==================================================================== */
-
-/* ======================= Imprimir apenas cartões ==================== */
-function printSheet(){
-  window.print(); // @media print já isola #printArea
-}
-/* ==================================================================== */
-
-/* ========================= Escaneamento (câmera) ==================== */
-const videoEl = document.getElementById('videoElement');
-const overlay = document.getElementById('overlayCanvas');
-const startBtn = document.getElementById('startCamBtn');
-const stopBtn = document.getElementById('stopCamBtn');
-const captureBtn = document.getElementById('captureBtn');
-const autoScanCheckbox = document.getElementById('autoScan');
-const resultsList = document.getElementById('resultsList');
-
-let stream = null;
-let autoScanInterval = null;
-
-const boxX = document.getElementById('boxX');
-const boxY = document.getElementById('boxY');
-const boxW = document.getElementById('boxW');
-const boxH = document.getElementById('boxH');
-const threshSlider = document.getElementById('threshSlider');
-const threshVal = document.getElementById('threshVal');
-
-threshSlider.addEventListener('input', () => { threshVal.textContent = threshSlider.value; });
-
-async function startCamera() {
-  try {
-    // Force rear camera (environment). If unavailable, this will throw; we'll catch and try fallback.
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } }, audio:false });
-  } catch (err) {
-    // Fallback: try without exact (best available)
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio:false });
-    } catch (err2) {
-      // Last resort: any camera
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio:false });
-      } catch (err3) {
-        alert('Não foi possível abrir a câmera: ' + err3.message);
-        return;
-      }
-    }
-  }
-
-  videoEl.srcObject = stream;
-  startBtn.disabled = true;
-  stopBtn.disabled = false;
-  captureBtn.disabled = false;
-
-  // set overlay size after metadata loads
-  videoEl.addEventListener('loadedmetadata', function once() {
-    resizeOverlay();
-    drawOverlay();
-    videoEl.removeEventListener('loadedmetadata', once);
-  });
-
-  // auto-scan handler
-  autoScanCheckbox.addEventListener('change', () => {
-    if (autoScanCheckbox.checked) {
-      autoScanInterval = setInterval(() => scanAndProcess(), 1800);
-    } else {
-      if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
-    }
-  });
-}
-
-function stopCamera() {
-  if (stream) {
-    stream.getTracks().forEach(t => t.stop());
-    stream = null;
-  }
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-  captureBtn.disabled = true;
-  if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; autoScanCheckbox.checked = false; }
-  clearOverlay();
-}
-
-function resizeOverlay() {
-  overlay.width = videoEl.videoWidth || 640;
-  overlay.height = videoEl.videoHeight || 480;
-  overlay.style.width = videoEl.clientWidth + 'px';
-  overlay.style.height = videoEl.clientHeight + 'px';
-  drawOverlay();
-}
-
-function clearOverlay() {
-  const ctx = overlay.getContext('2d');
-  ctx.clearRect(0,0,overlay.width,overlay.height);
-}
-
-function drawOverlay() {
-  if (!overlay.width) return;
-  const ctx = overlay.getContext('2d');
-  ctx.clearRect(0,0,overlay.width,overlay.height);
-
-  // mask
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(0,0,overlay.width,overlay.height);
-
-  const x = Math.round((boxX.value/100) * overlay.width);
-  const y = Math.round((boxY.value/100) * overlay.height);
-  const w = Math.round((boxW.value/100) * overlay.width);
-  const h = Math.round((boxH.value/100) * overlay.height);
-
-  // clear ROI
-  ctx.clearRect(x, y, w, h);
-
-  // border
-  ctx.strokeStyle = 'lime';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x+1.5, y+1.5, w-3, h-3);
-
-  // helper text
-  ctx.fillStyle = 'white';
-  ctx.font = '14px Arial';
-  ctx.fillText('Alinhe o cartão dentro do retângulo', Math.max(8, x + 8), y + 20);
-  ctx.fillText(`Q: ${numQuestionsEl.value}  /  Opts: ${numOptionsEl.value}`, Math.max(8, x + 8), y + 40);
-}
-
-[boxX, boxY, boxW, boxH].forEach(inp => inp.addEventListener('input', drawOverlay));
-startBtn.addEventListener('click', startCamera);
-stopBtn.addEventListener('click', stopCamera);
-captureBtn.addEventListener('click', scanAndProcess);
-
-function scanAndProcess() {
-  if (!stream) { alert('Câmera não iniciada'); return; }
-  const vw = videoEl.videoWidth;
-  const vh = videoEl.videoHeight;
-  const c = document.createElement('canvas');
-  c.width = vw; c.height = vh;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(videoEl, 0, 0, vw, vh);
-
-  const rx = Math.round((boxX.value/100) * vw);
-  const ry = Math.round((boxY.value/100) * vh);
-  const rw = Math.round((boxW.value/100) * vw);
-  const rh = Math.round((boxH.value/100) * vh);
-
-  // ensure ROI inside canvas
-  if (rw <= 0 || rh <= 0) { alert('Área de interesse inválida'); return; }
-  const img = ctx.getImageData(rx, ry, rw, rh);
-
-  const answers = detectFilledBubbles(img, parseInt(numQuestionsEl.value,10), parseInt(numOptionsEl.value,10), parseInt(bubbleSizeEl.value,10), parseInt(threshSlider.value,10));
-
-  const turma = document.getElementById('selectClass').value || '';
-  const aluno = document.getElementById('selectStudent').value || '';
-  const numero = document.getElementById('studentNumber').value || '';
-  const timestamp = (new Date()).toISOString();
-
-  const resultObj = { turma, aluno, numero, timestamp, numQuestions: parseInt(numQuestionsEl.value,10), numOptions: parseInt(numOptionsEl.value,10), answers };
-
-  results.unshift(resultObj);
-  if (results.length > 500) results.length = 500;
-  renderResultsList();
-}
-
-/**
- * detectFilledBubbles
- * - imgData: ImageData of ROI
- * - nQ: number of questions
- * - nOpt: number of options (4 or 5)
- * - bubblePx: approximate visual diameter in pixels (from UI slider)
- * - threshold: darkness threshold (0-255) — lower => requires darker fill
- *
- * Returns array length nQ of letters or null.
- */
-function detectFilledBubbles(imgData, nQ, nOpt, bubblePx, threshold) {
-  const w = imgData.width;
-  const h = imgData.height;
-  const gray = new Uint8ClampedArray(w*h);
-  for (let i=0, p=0; i < w*h; i++, p+=4) {
-    const r = imgData.data[p], g = imgData.data[p+1], b = imgData.data[p+2];
-    const l = Math.round(0.299*r + 0.587*g + 0.114*b);
-    gray[i] = l;
-  }
-
-  const answers = new Array(nQ).fill(null);
-  const rowH = h / nQ;
-  const marginX = Math.max(0.06 * w, bubblePx);
-  const usableW = Math.max(1, w - 2*marginX);
-  const gapX = (nOpt>1) ? (usableW / (nOpt - 1)) : usableW;
-  const sampleRadius = Math.max(3, Math.round(bubblePx * 0.35));
-
-  for (let q = 0; q < nQ; q++) {
-    let bestOpt = null;
-    let bestDarkness = -1;
-    for (let o = 0; o < nOpt; o++) {
-      const cx = Math.round(marginX + o * gapX);
-      const cy = Math.round(rowH * (q + 0.5));
-      let sum = 0, count = 0;
-      const r = sampleRadius;
-      const x0 = Math.max(0, cx - r), y0 = Math.max(0, cy - r);
-      const x1 = Math.min(w-1, cx + r), y1 = Math.min(h-1, cy + r);
-      for (let yy = y0; yy <= y1; yy++) {
-        const rowIdx = yy * w;
-        for (let xx = x0; xx <= x1; xx++) {
-          sum += gray[rowIdx + xx];
-          count++;
-        }
-      }
-      const avg = (count>0) ? (sum / count) : 255;
-      const darkness = 255 - avg;
-      if (darkness > bestDarkness) { bestDarkness = darkness; bestOpt = o; }
-    }
-    if (bestDarkness >= (255 - threshold)) {
-      answers[q] = String.fromCharCode(65 + bestOpt);
-    } else {
-      answers[q] = null;
-    }
-  }
-  return answers;
-}
-
-/* render results */
-function renderResultsList() {
-  const list = document.getElementById('resultsList');
-  list.innerHTML = '';
-  if (results.length === 0) { list.textContent = '(nenhum)'; return; }
-  results.forEach((r, idx) => {
-    const div = document.createElement('div');
-    div.style.marginBottom = '8px';
-    div.style.borderBottom = '1px solid #eee';
-    div.style.paddingBottom = '6px';
-    const qCount = r.numQuestions;
-    const answered = r.answers.filter(a => a !== null).length;
-    const html = `<strong>${escapeHtml(r.turma || '(sem turma)')} — ${escapeHtml(r.aluno || '(sem aluno)')} #${escapeHtml(r.numero || '')}</strong>
-      <div style="font-size:12px;color:#444">Detectado: ${answered}/${qCount} — ${new Date(r.timestamp).toLocaleString()}</div>
-      <div style="font-family:monospace; font-size:12px; margin-top:6px; white-space:pre-wrap;">${formatAnswers(r.answers)}</div>
-      <div style="margin-top:6px;font-size:12px;">
-        <button class="small" onclick='copyResult(${idx})'>Copiar JSON</button>
-        <button class="small" onclick='removeResult(${idx})'>Remover</button>
-      </div>`;
-    div.innerHTML = html;
-    list.appendChild(div);
-  });
-}
-
-function formatAnswers(arr) {
-  return arr.map((a,i) => `${i+1}:${a || '-'}`).join('  ');
-}
-
-function copyResult(idx) {
-  const r = results[idx];
-  if (!r) return;
-  navigator.clipboard.writeText(JSON.stringify(r, null, 2)).then(()=> {
-    alert('Resultado copiado para a área de transferência.');
-  }).catch(()=> alert('Falha ao copiar.'));
-}
-
-function removeResult(idx) {
-  results.splice(idx,1);
-  renderResultsList();
-}
-
-/* helper */
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-/* redraw overlay periodically (handles layout changes) */
-setInterval(() => { if (stream && overlay.width) drawOverlay(); }, 600);
-
-/* initial UI setup */
-document.documentElement.style.setProperty('--bubble', bubbleSizeEl.value + 'px');
-document.getElementById('bubbleSizeValue').textContent = bubbleSizeEl.value;
-document.getElementById('appVerSmall').textContent = appVersion;
-document.getElementById('appVersion').textContent = `Versão ${appVersion}`;
-updateSheet();
-renderResultsList();
-/* ==================================================================== */
-</script>
-</body>
-</html>
+let studentsData = {};
+let results = [];
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+const numQuestionsEl=document.getElementById('numQuestions');
+const numOptionsEl=document.getElementById('numOptions');
+const perPageEl=document.getElementById('perPage');
+const bubbleSizeEl=document.getElementById('bubbleSize');
+const bubbleSizeVal=document.getElementById('bubbleSizeValue');
+[numQuestionsEl,numOptionsEl,perPageEl].forEach(el=>{el.addEventListener('change',updateSheet);});
+bubbleSizeEl.addEventListener('input',()=>{const v=parseInt(bubbleSizeEl.value,10);bubbleSizeVal.textContent=v;document.documentElement.style.setProperty('--bubble',v+'px');updateSheet();});
+function updateSheet(){const numQuestions=parseInt(numQuestionsEl.value,10);const numOptions=parseInt(numOptionsEl.value,10);const perPage=parseInt(perPageEl.value,10);const container=document.getElementById('sheetContainer');container.innerHTML='';container.classList.remove('layout-1','layout-2','layout-4');container.classList.add(`layout-${perPage}`);for(let i=0;i<perPage;i++){const page=document.createElement('div');page.className='page';const header=document.createElement('div');header.className='headerCard';header.innerHTML=`<div>Nome: <span class="nowrap">______________________________</span>&nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span></div><div>Turma: <span class="nowrap">____________</span>&nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span></div>`;page.appendChild(header);for(let q=1;q<=numQuestions;q++){const qDiv=document.createElement('div');qDiv.className='question';let opts='';for(let o=0;o<numOptions;o++){const letter=String.fromCharCode(65+o);opts+=`<span class="opt" data-q="${q}" data-opt="${letter}">${letter}</span>`;}qDiv.innerHTML=`${q}. ${opts}`;page.appendChild(qDiv);}container.appendChild(page);}}
+document.getElementById('fileInput').addEventListener('change',function(e){const files=e.target.files;for(let f of files){const reader=new FileReader();reader.onload=function(ev){const data=new Uint8Array(ev.target.result);const workbook=XLSX.read(data,{type:'array'});workbook.SheetNames.forEach(sheetName=>{const sheet=workbook.Sheets[sheetName];const json=XLSX.utils.sheet_to_json(sheet);studentsData[sheetName]=json.map(r=>({numero:r['Nº'],nome:r['Nome']}));});updateClassOptions();};reader.readAsArrayBuffer(f);}});
+function updateClassOptions(){const selectClass=document.getElementById('selectClass');selectClass.innerHTML='<option value="">-- Selecione --</option>';Object.keys(studentsData).forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;selectClass.appendChild(opt);});document.getElementById('selectStudent').innerHTML='<option value="">-- Selecione --</option>';document.getElementById('studentNumber').value='';}
+document.getElementById('selectClass').addEventListener('change',function(){const turma=this.value;const selectStudent=document.getElementById('selectStudent');selectStudent.innerHTML='<option value="">-- Selecione --</option>';if(studentsData[turma]){studentsData[turma].forEach(s=>{const opt=document.createElement('option');opt.value=s.nome;opt.textContent=s.nome;opt.dataset.numero=s.numero??'';selectStudent.appendChild(opt);});}document.getElementById('studentNumber').value='';});
+document.getElementById('selectStudent').addEventListener('change',function(){const numero=this.selectedOptions[0]?.dataset?.numero||'';document.getElementById('studentNumber').value=numero;});
+function exportResults(){if(results.length===0){alert("Nenhum resultado registrado ainda.");return;}const ws=XLSX.utils.json_to_sheet(results);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Resultados");XLSX.writeFile(wb,"Resultados.xlsx");}
+function printSheet(){window.print();}
+const videoEl=document.getElementById('videoElement');const overlay=document.getElementById('overlayCanvas');const startBtn=document.getElementById('startCamBtn');const stopBtn=document.getElementById('stopCamBtn');const captureBtn=document.getElementById('captureBtn');const autoScanCheckbox=document.getElementById('autoScan');const resultsList=document.getElementById('resultsList');let stream=null;let autoScanInterval=null;const boxX=document.getElementById('boxX');const boxY=document.getElementById('boxY');const boxW=document.getElementById('boxW');const boxH=document.getElementById('boxH');const threshSlider=document.getElementById('threshSlider');const threshVal=document.getElementById('threshVal');threshSlider.addEventListener('input',()=>{threshVal.textContent=threshSlider.value;});
+async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:"environment"}},audio:false});}catch(err){try{stream=await
