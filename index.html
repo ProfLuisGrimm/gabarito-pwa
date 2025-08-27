@@ -372,18 +372,42 @@ captureBtn.addEventListener('click',()=>{ captureScan(); });
 startBtn.addEventListener('click',()=>{ startCamera(); });
 stopBtn.addEventListener('click',()=>{ stopCamera(); });
 
-function captureScan(){
-  if(!videoEl.videoWidth)return;
-  const tempCanvas=document.createElement('canvas');
-  tempCanvas.width=videoEl.videoWidth; tempCanvas.height=videoEl.videoHeight;
-  const ctx=tempCanvas.getContext('2d');
-  ctx.drawImage(videoEl,0,0);
-  // Aqui se processaria o OCR ou análise das bolhas, por enquanto só captura
-  const dataUrl=tempCanvas.toDataURL();
-  results.unshift({timestamp:new Date().toLocaleString(),image:dataUrl});
-  if(results.length>20)results.pop();
-  updateResultsList();
+function scanAndProcess() {
+  if (!stream) { alert('Câmera não iniciada'); return; }
+
+  const vw = videoEl.videoWidth;
+  const vh = videoEl.videoHeight;
+
+  const rx = Math.round((boxX.value/100) * vw);
+  const ry = Math.round((boxY.value/100) * vh);
+  const rw = Math.round((boxW.value/100) * vw);
+  const rh = Math.round((boxH.value/100) * vh);
+
+  if (rw <= 0 || rh <= 0) { alert('Área de interesse inválida'); return; }
+
+  const ctx = overlay.getContext('2d');
+  const frame = ctx.getImageData(rx, ry, rw, rh);
+
+  const answers = detectFilledBubbles(
+    frame,
+    parseInt(numQuestionsEl.value,10),
+    parseInt(numOptionsEl.value,10),
+    parseInt(bubbleSizeEl.value,10),
+    parseInt(threshSlider.value,10)
+  );
+
+  const turma = document.getElementById('selectClass').value || '';
+  const aluno = document.getElementById('selectStudent').value || '';
+  const numero = document.getElementById('studentNumber').value || '';
+  const timestamp = (new Date()).toISOString();
+
+  const resultObj = { turma, aluno, numero, timestamp, numQuestions: parseInt(numQuestionsEl.value,10), numOptions: parseInt(numOptionsEl.value,10), answers };
+
+  results.unshift(resultObj);
+  if (results.length > 500) results.length = 500;
+  renderResultsList();
 }
+
 
 function updateResultsList(){
   resultsList.innerHTML='';
