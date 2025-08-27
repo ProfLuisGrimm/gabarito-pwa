@@ -299,3 +299,238 @@ function updateSheet() {
   }
 }
 /* ========================================================================== */
+/* ===================== BLOCO 7: Upload e leitura das turmas ================= */
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const files = e.target.files;
+  for (let f of files) {
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const data = new Uint8Array(ev.target.result);
+      const workbook = XLSX.read(data, { type:'array' });
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        studentsData[sheetName] = json.map(r => ({ numero: r['Nº'], nome: r['Nome'] }));
+      });
+      updateClassOptions();
+    };
+    reader.readAsArrayBuffer(f);
+  }
+});
+
+function updateClassOptions(){
+  const selectClass = document.getElementById('selectClass');
+  selectClass.innerHTML = '<option value="">-- Selecione --</option>';
+  Object.keys(studentsData).forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c; opt.textContent=c;
+    selectClass.appendChild(opt);
+  });
+  document.getElementById('selectStudent').innerHTML='<option value="">-- Selecione --</option>';
+  document.getElementById('studentNumber').value='';
+}
+
+document.getElementById('selectClass').addEventListener('change', function(){
+  const turma=this.value;
+  const selectStudent=document.getElementById('selectStudent');
+  selectStudent.innerHTML='<option value="">-- Selecione --</option>';
+  if(studentsData[turma]){
+    studentsData[turma].forEach(s=>{
+      const opt=document.createElement('option');
+      opt.value=s.nome;
+      opt.textContent=s.nome;
+      opt.dataset.numero=s.numero??'';
+      selectStudent.appendChild(opt);
+    });
+  }
+  document.getElementById('studentNumber').value='';
+});
+
+document.getElementById('selectStudent').addEventListener('change', function(){
+  const numero=this.selectedOptions[0]?.dataset?.numero||'';
+  document.getElementById('studentNumber').value=numero;
+});
+/* ========================================================================== */
+
+/* ===================== BLOCO 8: Exportar resultados ======================= */
+function exportResults(){
+  if(results.length===0){ alert("Nenhum resultado registrado ainda."); return; }
+  const ws=XLSX.utils.json_to_sheet(results);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+  XLSX.writeFile(wb, "Resultados.xlsx");
+}
+/* ========================================================================== */
+
+/* ===================== BLOCO 9: Impressão de cartões ===================== */
+function printSheet(){ window.print(); }
+/* ========================================================================== */
+
+/* ===================== BLOCO 10: Escaneamento da câmera ================== */
+const videoEl=document.getElementById('videoElement');
+const overlay=document.getElementById('overlayCanvas');
+const startBtn=document.getElementById('startCamBtn');
+const stopBtn=document.getElementById('stopCamBtn');
+const captureBtn=document.getElementById('captureBtn');
+const autoScanCheckbox=document.getElementById('autoScan');
+const resultsList=document.getElementById('resultsList');
+
+let stream=null;
+let autoScanInterval=null;
+
+const boxX=document.getElementById('boxX');
+const boxY=document.getElementById('boxY');
+const boxW=document.getElementById('boxW');
+const boxH=document.getElementById('boxH');
+const threshSlider=document.getElementById('threshSlider');
+const threshVal=document.getElementById('threshVal');
+threshSlider.addEventListener('input', ()=>{ threshVal.textContent=threshSlider.value; });
+
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ exact:"environment" } }, audio:false });
+  }catch(err){
+    try{ stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }, audio:false }); }
+    catch(err2){ try{ stream=await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); }catch(err3){ alert('Não foi possível abrir a câmera: '+err3.message); return; } }
+  }
+  videoEl.srcObject=stream;
+  startBtn.disabled=true; stopBtn.disabled=false; captureBtn.disabled=false;
+
+  videoEl.addEventListener('loadedmetadata', function once(){
+    resizeOverlay();
+    drawOverlay();
+    videoEl.removeEventListener('loadedmetadata', once);
+  });
+
+  autoScanCheckbox.addEventListener('change', ()=>{
+    if(autoScanCheckbox.checked){ autoScanInterval=setInterval(scanAndProcess, 1800); }
+    else{ if(autoScanInterval){ clearInterval(autoScanInterval); autoScanInterval=null; } }
+  });
+}
+
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  startBtn.disabled=false; stopBtn.disabled=true; captureBtn.disabled=true;
+  if(autoScanInterval){ clearInterval(autoScanInterval); autoScanInterval=null; autoScanCheckbox.checked=false; }
+  clearOverlay();
+}
+
+function resizeOverlay(){
+  overlay.width=videoEl.videoWidth||640;
+  overlay.height=videoEl.videoHeight||480;
+  overlay.style.width=videoEl.clientWidth+'px';
+  overlay.style.height=videoEl.clientHeight+'px';
+  drawOverlay();
+}
+
+function clearOverlay(){
+  const ctx=overlay.getContext('2d'); ctx.clearRect(0,0,overlay.width,overlay.height);
+}
+
+function drawOverlay(){
+  if(!overlay.width) return;
+  const ctx=overlay.getContext('2d');
+  ctx.clearRect(0,0,overlay.width,overlay.height);
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(0,0,overlay.width,overlay.height);
+
+  const x=Math.round((boxX.value/100)*overlay.width);
+  const y=Math.round((boxY.value/100)*overlay.height);
+  const w=Math.round((boxW.value/100)*overlay.width);
+  const h=Math.round((boxH.value/100)*overlay.height);
+
+  ctx.clearRect(x,y,w,h);
+  ctx.strokeStyle='lime'; ctx.lineWidth=3; ctx.strokeRect(x+1.5,y+1.5,w-3,h-3);
+
+  ctx.fillStyle='white'; ctx.font='14px Arial';
+  ctx.fillText('Alinhe o cartão dentro do retângulo', Math.max(8,x+8), y+20);
+  ctx.fillText(`Q: ${numQuestionsEl.value}  /  Opts: ${numOptionsEl.value}`, Math.max(8,x+8), y+40);
+}
+
+[boxX, boxY, boxW, boxH].forEach(inp=>inp.addEventListener('input', drawOverlay));
+startBtn.addEventListener('click', startCamera);
+stopBtn.addEventListener('click', stopCamera);
+captureBtn.addEventListener('click', scanAndProcess);
+/* ========================================================================== */
+
+/* ===================== BLOCO 11: Detecção de bolhas ====================== */
+function scanAndProcess(){
+  if(!stream){ alert('Câmera não iniciada'); return; }
+  const vw=videoEl.videoWidth;
+  const vh=videoEl.videoHeight;
+  const c=document.createElement('canvas'); c.width=vw; c.height=vh;
+  const ctx=c.getContext('2d'); ctx.drawImage(videoEl,0,0,vw,vh);
+
+  const rx=Math.round((boxX.value/100)*vw);
+  const ry=Math.round((boxY.value/100)*vh);
+  const rw=Math.round((boxW.value/100)*vw);
+  const rh=Math.round((boxH.value/100)*vh);
+  if(rw<=0||rh<=0){ alert('Área de interesse inválida'); return; }
+
+  const img=ctx.getImageData(rx,ry,rw,rh);
+  const answers=detectFilledBubbles(img, parseInt(numQuestionsEl.value,10), parseInt(numOptionsEl.value,10), parseInt(bubbleSizeEl.value,10), parseInt(threshSlider.value,10));
+
+  const turma=document.getElementById('selectClass').value||'';
+  const aluno=document.getElementById('selectStudent').value||'';
+  const numero=document.getElementById('studentNumber').value||'';
+  const timestamp=(new Date()).toISOString();
+
+  const resultObj={ turma, aluno, numero, timestamp, numQuestions:parseInt(numQuestionsEl.value,10), numOptions:parseInt(numOptionsEl.value,10), answers };
+  results.unshift(resultObj);
+  if(results.length>500) results.length=500;
+  renderResultsList();
+}
+
+function detectFilledBubbles(imgData,nQ,nOpt,bubblePx,threshold){
+  const w=imgData.width, h=imgData.height;
+  const gray=new Uint8ClampedArray(w*h);
+  for(let i=0,p=0;i<w*h;i++,p+=4){
+    const r=imgData.data[p], g=imgData.data[p+1], b=imgData.data[p+2];
+    gray[i]=Math.round(0.299*r+0.587*g+0.114*b);
+  }
+
+  const answers=new Array(nQ).fill(null);
+  const rowH=h/nQ;
+  const marginX=Math.max(0.06*w,bubblePx);
+  const usableW=Math.max(1,w-2*marginX);
+  const gapX=(nOpt>1)?(usableW/(nOpt-1)):usableW;
+  for(let q=0;q<nQ;q++){
+    let maxFill=0, selected=-1;
+    for(let o=0;o<nOpt;o++){
+      const cx=Math.round(marginX+o*gapX);
+      const cy=Math.round((q+0.5)*rowH);
+      let fill=0, count=0;
+      const rad=Math.round(bubblePx/2);
+      for(let dy=-rad;dy<=rad;dy++){
+        const y=cy+dy; if(y<0||y>=h) continue;
+        for(let dx=-rad;dx<=rad;dx++){
+          const x=cx+dx; if(x<0||x>=w) continue;
+          if(dx*dx+dy*dy>rad*rad) continue;
+          if(gray[y*w+x]<threshold) fill++;
+          count++;
+        }
+      }
+      if(fill>maxFill){ maxFill=fill; selected=o; }
+    }
+    answers[q]=selected>=0?String.fromCharCode(65+selected):'';
+  }
+  return answers;
+}
+/* ========================================================================== */
+
+/* ===================== BLOCO 12: Renderização da lista =================== */
+function renderResultsList(){
+  resultsList.innerHTML='';
+  results.forEach(r=>{
+    const div=document.createElement('div');
+    div.style.padding='4px 0';
+    div.style.borderBottom='1px dashed #ccc';
+    div.style.fontSize='13px';
+    div.innerHTML=`<strong>${r.aluno||r.numero||'Aluno'} [${r.turma}]</strong> → ${r.answers.join(', ')}`;
+    resultsList.appendChild(div);
+  });
+}
+/* ========================================================================== */
+</script>
+</body>
+</html>
