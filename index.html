@@ -1,70 +1,151 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Gabarito Digital — Completo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gabarito Digital — Projeto Completo</title>
 <link rel="icon" href="data:;base64,=">
 <style>
-:root { --bubble: 22px; }
-* { box-sizing: border-box; }
-body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#222; }
-.menu { display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
-.menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
-#exitBtn { position: fixed; top:10px; right:10px; z-index:1000; padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px; font-weight:700; cursor:pointer; font-size:14px; }
-.screen { display:none; }
-.screen.active { display:block; }
-.controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-.controls label { display:flex; flex-direction:column; font-size:14px; }
-.controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-.controls input[type="number"] { width: 70px; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
-#printArea { display:block; }
-#sheetContainer { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
-.page { border: 2px solid #000; display: inline-block; padding: 14px; background:#fff; box-sizing: border-box; }
-.layout-1 .page { width: auto; }
-.layout-2 .page { width: calc(50% - 5px); }
-.layout-4 .page { width: calc(50% - 5px); }
-.headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
-.nowrap { white-space: nowrap; }
-.question { margin-bottom: 8px; font-size: 14px; }
-.opt { display:inline-flex; width: var(--bubble); height: var(--bubble); border: 1.6px solid #000; border-radius: 50%; align-items:center; justify-content:center; font-weight:700; margin-right:8px; user-select:none; }
-#appVersion { position: fixed; right: 10px; bottom: 10px; font-size: 12px; color: #666; z-index:1000; pointer-events: none; }
-#videoWrap { position: relative; display:inline-block; border:1px solid #ccc; }
-#videoElement { width: 640px; height: 480px; background:#000; display:block; }
-#overlayCanvas { position:absolute; left:0; top:0; pointer-events:none; }
-.scanControls { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
-.small { font-size:13px; padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid #bbb; background:#fff; }
-#resultsList { max-height:300px; overflow:auto; border:1px dashed #ccc; padding:8px; background:#fafafa; }
-@media (max-width:800px) { #videoElement { width: 320px; height: 240px; } }
-@media print { body * { visibility: hidden !important; } #printArea, #printArea * { visibility: visible !important; } #printArea { position: absolute; left:0; top:0; width:100%; } .page { border: 1px solid #000; } .menu, .controls, #exitBtn, #appVersion { display:none !important; } }
+  :root { --bubble: 22px; }
+
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#222; }
+
+  .menu { display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
+  .menu button { padding:8px 12px; font-weight:600; cursor:pointer; }
+  #exitBtn {
+    position: fixed; top:10px; right:10px; z-index:1000;
+    padding:6px 10px; background:#e74c3c; color:#fff; border:0; border-radius:6px;
+    font-weight:700; cursor:pointer; font-size:14px;
+  }
+
+  .screen { display:none; }
+  .screen.active { display:block; }
+
+  .controls { margin-bottom: 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .controls label { display:flex; flex-direction:column; font-size:14px; }
+  .controls .inline { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .controls input[type="number"], .controls select { width: 70px; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
+
+  #printArea { display:block; }
+  #sheetContainer { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
+  .page {
+    border: 2px solid #000;
+    display: inline-block;
+    padding: 14px;
+    background:#fff;
+    box-sizing: border-box;
+  }
+  .layout-1 .page { width: auto; }
+  .layout-2 .page { width: calc(50% - 5px); }
+  .layout-4 .page { width: calc(50% - 5px); }
+
+  .headerCard { margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
+  .nowrap { white-space: nowrap; }
+
+  .question { margin-bottom: 8px; font-size: 14px; }
+  .opt {
+    display:inline-flex;
+    width: var(--bubble);
+    height: var(--bubble);
+    border: 1.6px solid #000;
+    border-radius: 50%;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    margin-right:8px;
+    user-select:none;
+  }
+
+  #appVersion {
+    position: fixed; right: 10px; bottom: 10px; font-size: 12px; color: #666; z-index:1000; pointer-events: none;
+  }
+
+  #videoWrap { position: relative; display:inline-block; border:1px solid #ccc; }
+  #videoElement { width: 640px; height: 480px; background:#000; display:block; }
+  #overlayCanvas { position:absolute; left:0; top:0; pointer-events:none; }
+
+  .scanControls { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+  .small { font-size:13px; padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid #bbb; background:#fff; }
+
+  #resultsList { max-height:300px; overflow:auto; border:1px dashed #ccc; padding:8px; background:#fafafa; }
+
+  @media (max-width:800px) {
+    #videoElement { width: 320px; height: 240px; }
+  }
+
+  @media print {
+    body * { visibility: hidden !important; }
+    #printArea, #printArea * { visibility: visible !important; }
+    #printArea { position: absolute; left:0; top:0; width:100%; }
+    .page { border: 1px solid #000; }
+    .menu, .controls, #exitBtn, #appVersion { display:none !important; }
+  }
 </style>
 </head>
 <body>
+
 <button id="exitBtn" onclick="window.location.href='https://github.com/seu-usuario/gabarito-pwa';">Sair ×</button>
+
 <div class="menu">
   <button onclick="showScreen('gabaritoScreen')">Configurar Gabarito</button>
   <button onclick="showScreen('escaneamentoScreen')">Escanear Cartão</button>
   <div style="flex:1"></div>
   <div class="inline"><strong>Versão</strong>&nbsp;<span id="appVerSmall">1.10</span></div>
 </div>
+
 <div id="gabaritoScreen" class="screen active">
   <div class="controls">
-    <label>Quantidade de questões:<input type="number" id="numQuestions" value="10" min="1" max="60"></label>
-    <label>Alternativas:<select id="numOptions"><option value="4" selected>4 (A–D)</option><option value="5">5 (A–E)</option></select></label>
-    <label>Gabaritos por folha:<select id="perPage"><option value="1" selected>1</option><option value="2">2</option><option value="4">4</option></select></label>
-    <label>Tamanho das bolhas:<span class="inline"><input type="range" id="bubbleSize" min="14" max="36" value="22"><span id="bubbleSizeValue" style="display:inline-block; min-width:28px; text-align:right;">22</span><span style="margin-left:4px;">px</span></span></label>
+    <label>Quantidade de questões:
+      <input type="number" id="numQuestions" value="10" min="1" max="60">
+    </label>
+    <label>Alternativas:
+      <select id="numOptions">
+        <option value="4" selected>4 (A–D)</option>
+        <option value="5">5 (A–E)</option>
+      </select>
+    </label>
+    <label>Gabaritos por folha:
+      <select id="perPage">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="4">4</option>
+      </select>
+    </label>
+    <label>Tamanho das bolhas:
+      <span class="inline">
+        <input type="range" id="bubbleSize" min="14" max="36" value="22">
+        <span id="bubbleSizeValue" style="display:inline-block; min-width:28px; text-align:right;">22</span><span style="margin-left:4px;">px</span>
+      </span>
+    </label>
     <button onclick="printSheet()">Imprimir</button>
   </div>
-  <div id="printArea"><div id="sheetContainer" class="layout-1"></div></div>
+  <div id="printArea">
+    <div id="sheetContainer" class="layout-1"></div>
+  </div>
 </div>
+
 <div id="escaneamentoScreen" class="screen">
   <div class="controls">
-    <label>Upload das turmas (Excel .xlsx ou .csv):<input type="file" id="fileInput" multiple></label>
-    <label>Turma:<select id="selectClass"><option value="">-- Selecione --</option></select></label>
-    <label>Aluno:<select id="selectStudent"><option value="">-- Selecione --</option></select></label>
-    <label>Nº do aluno:<input type="text" id="studentNumber" readonly></label>
+    <label>Upload das turmas (Excel .xlsx ou .csv):
+      <input type="file" id="fileInput" multiple>
+    </label>
+    <label>Turma:
+      <select id="selectClass">
+        <option value="">-- Selecione --</option>
+      </select>
+    </label>
+    <label>Aluno:
+      <select id="selectStudent">
+        <option value="">-- Selecione --</option>
+      </select>
+    </label>
+    <label>Nº do aluno:
+      <input type="text" id="studentNumber" readonly>
+    </label>
     <button onclick="exportResults()">Exportar Excel</button>
   </div>
+
   <div style="display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start;">
     <div>
       <div id="videoWrap">
@@ -75,14 +156,29 @@ body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#
         <button class="small" id="startCamBtn">Iniciar Câmera</button>
         <button class="small" id="stopCamBtn" disabled>Parar Câmera</button>
         <button class="small" id="captureBtn" disabled>Capturar / Detectar</button>
-        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">Auto-scan:<input type="checkbox" id="autoScan" style="transform: scale(1.1); margin-left:6px;"></label>
-        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">Limiar:<input type="range" id="threshSlider" min="0" max="255" value="140" style="margin-left:6px;"><span id="threshVal" style="min-width:30px; display:inline-block; text-align:right;">140</span></label>
+        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">
+          Auto-scan:
+          <input type="checkbox" id="autoScan" style="transform: scale(1.1); margin-left:6px;">
+        </label>
+        <label class="small" style="display:inline-flex; align-items:center; gap:6px;">
+          Limiar:
+          <input type="range" id="threshSlider" min="0" max="255" value="140" style="margin-left:6px;">
+          <span id="threshVal" style="min-width:30px; display:inline-block; text-align:right;">140</span>
+        </label>
       </div>
       <div style="margin-top:8px;">
-        <label class="small">Posição X:<input type="range" id="boxX" min="0" max="100" value="10"></label>
-        <label class="small">Posição Y:<input type="range" id="boxY" min="0" max="100" value="10"></label>
-        <label class="small">Largura %:<input type="range" id="boxW" min="20" max="100" value="80"></label>
-        <label class="small">Altura %:<input type="range" id="boxH" min="20" max="100" value="80"></label>
+        <label class="small">Posição X:
+          <input type="range" id="boxX" min="0" max="100" value="10">
+        </label>
+        <label class="small">Posição Y:
+          <input type="range" id="boxY" min="0" max="100" value="10">
+        </label>
+        <label class="small">Largura %:
+          <input type="range" id="boxW" min="20" max="100" value="80">
+        </label>
+        <label class="small">Altura %:
+          <input type="range" id="boxH" min="20" max="100" value="80">
+        </label>
       </div>
     </div>
     <div style="max-width:460px;">
@@ -90,36 +186,215 @@ body { font-family: Arial, sans-serif; margin: 16px; background:#f7f7f7; color:#
       <ol>
         <li>Imprima o cartão gerado (ou mostre em tela grande).</li>
         <li>Clique <em>Iniciar Câmera</em>, posicione o cartão de modo que caiba dentro do retângulo guia (overlay).</li>
-        <li>Se necessário, ajuste <em>Posição/Largura/Altura</em> até o retângulo cobrir somente a área de questões.</li>
+        <li>Ajuste <em>Posição/Largura/Altura</em> se necessário.</li>
         <li>Ajuste o limiar se houver muito brilho/sombra.</li>
-        <li>Clique <em>Capturar / Detectar</em>. Resultado será salvo em memória (veja lista abaixo).</li>
+        <li>Clique <em>Capturar / Detectar</em>. Resultado será salvo em memória.</li>
       </ol>
       <h4>Resultados detectados (últimos scans)</h4>
       <div id="resultsList"></div>
     </div>
   </div>
-  <p style="max-width:700px; margin-top:18px">(Próximo passo) Podemos depois adicionar captura automática em lote e calibração por foto de referência.</p>
 </div>
+
 <div id="appVersion">Versão 1.10</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const appVersion = "1.10";
+
 let studentsData = {};
 let results = [];
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
-const numQuestionsEl=document.getElementById('numQuestions');
-const numOptionsEl=document.getElementById('numOptions');
-const perPageEl=document.getElementById('perPage');
-const bubbleSizeEl=document.getElementById('bubbleSize');
-const bubbleSizeVal=document.getElementById('bubbleSizeValue');
-[numQuestionsEl,numOptionsEl,perPageEl].forEach(el=>{el.addEventListener('change',updateSheet);});
-bubbleSizeEl.addEventListener('input',()=>{const v=parseInt(bubbleSizeEl.value,10);bubbleSizeVal.textContent=v;document.documentElement.style.setProperty('--bubble',v+'px');updateSheet();});
-function updateSheet(){const numQuestions=parseInt(numQuestionsEl.value,10);const numOptions=parseInt(numOptionsEl.value,10);const perPage=parseInt(perPageEl.value,10);const container=document.getElementById('sheetContainer');container.innerHTML='';container.classList.remove('layout-1','layout-2','layout-4');container.classList.add(`layout-${perPage}`);for(let i=0;i<perPage;i++){const page=document.createElement('div');page.className='page';const header=document.createElement('div');header.className='headerCard';header.innerHTML=`<div>Nome: <span class="nowrap">______________________________</span>&nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span></div><div>Turma: <span class="nowrap">____________</span>&nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span></div>`;page.appendChild(header);for(let q=1;q<=numQuestions;q++){const qDiv=document.createElement('div');qDiv.className='question';let opts='';for(let o=0;o<numOptions;o++){const letter=String.fromCharCode(65+o);opts+=`<span class="opt" data-q="${q}" data-opt="${letter}">${letter}</span>`;}qDiv.innerHTML=`${q}. ${opts}`;page.appendChild(qDiv);}container.appendChild(page);}}
-document.getElementById('fileInput').addEventListener('change',function(e){const files=e.target.files;for(let f of files){const reader=new FileReader();reader.onload=function(ev){const data=new Uint8Array(ev.target.result);const workbook=XLSX.read(data,{type:'array'});workbook.SheetNames.forEach(sheetName=>{const sheet=workbook.Sheets[sheetName];const json=XLSX.utils.sheet_to_json(sheet);studentsData[sheetName]=json.map(r=>({numero:r['Nº'],nome:r['Nome']}));});updateClassOptions();};reader.readAsArrayBuffer(f);}});
-function updateClassOptions(){const selectClass=document.getElementById('selectClass');selectClass.innerHTML='<option value="">-- Selecione --</option>';Object.keys(studentsData).forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;selectClass.appendChild(opt);});document.getElementById('selectStudent').innerHTML='<option value="">-- Selecione --</option>';document.getElementById('studentNumber').value='';}
-document.getElementById('selectClass').addEventListener('change',function(){const turma=this.value;const selectStudent=document.getElementById('selectStudent');selectStudent.innerHTML='<option value="">-- Selecione --</option>';if(studentsData[turma]){studentsData[turma].forEach(s=>{const opt=document.createElement('option');opt.value=s.nome;opt.textContent=s.nome;opt.dataset.numero=s.numero??'';selectStudent.appendChild(opt);});}document.getElementById('studentNumber').value='';});
-document.getElementById('selectStudent').addEventListener('change',function(){const numero=this.selectedOptions[0]?.dataset?.numero||'';document.getElementById('studentNumber').value=numero;});
-function exportResults(){if(results.length===0){alert("Nenhum resultado registrado ainda.");return;}const ws=XLSX.utils.json_to_sheet(results);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Resultados");XLSX.writeFile(wb,"Resultados.xlsx");}
-function printSheet(){window.print();}
-const videoEl=document.getElementById('videoElement');const overlay=document.getElementById('overlayCanvas');const startBtn=document.getElementById('startCamBtn');const stopBtn=document.getElementById('stopCamBtn');const captureBtn=document.getElementById('captureBtn');const autoScanCheckbox=document.getElementById('autoScan');const resultsList=document.getElementById('resultsList');let stream=null;let autoScanInterval=null;const boxX=document.getElementById('boxX');const boxY=document.getElementById('boxY');const boxW=document.getElementById('boxW');const boxH=document.getElementById('boxH');const threshSlider=document.getElementById('threshSlider');const threshVal=document.getElementById('threshVal');threshSlider.addEventListener('input',()=>{threshVal.textContent=threshSlider.value;});
-async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:"environment"}},audio:false});}catch(err){try{stream=await
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+const numQuestionsEl = document.getElementById('numQuestions');
+const numOptionsEl   = document.getElementById('numOptions');
+const perPageEl      = document.getElementById('perPage');
+const bubbleSizeEl   = document.getElementById('bubbleSize');
+const bubbleSizeVal  = document.getElementById('bubbleSizeValue');
+
+[numQuestionsEl, numOptionsEl, perPageEl].forEach(el => {
+  el.addEventListener('change', updateSheet);
+});
+bubbleSizeEl.addEventListener('input', () => {
+  const v = parseInt(bubbleSizeEl.value,10);
+  bubbleSizeVal.textContent = v;
+  document.documentElement.style.setProperty('--bubble', v+'px');
+  updateSheet();
+});
+
+function updateSheet(){
+  const numQuestions = parseInt(numQuestionsEl.value,10);
+  const numOptions   = parseInt(numOptionsEl.value,10);
+  const perPage      = parseInt(perPageEl.value,10);
+
+  const container = document.getElementById('sheetContainer');
+  container.innerHTML = '';
+  container.classList.remove('layout-1','layout-2','layout-4');
+  container.classList.add(`layout-${perPage}`);
+
+  for(let i=0;i<perPage;i++){
+    const page = document.createElement('div'); page.className='page';
+    const header = document.createElement('div'); header.className='headerCard';
+    header.innerHTML=`<div>Nome: <span class="nowrap">______________________________</span>&nbsp;&nbsp;&nbsp; Nº: <span class="nowrap">______</span></div>
+                      <div>Turma: <span class="nowrap">____________</span>&nbsp;&nbsp;&nbsp; Data: <span class="nowrap">___ / ___ / ______</span></div>`;
+    page.appendChild(header);
+
+    for(let q=1;q<=numQuestions;q++){
+      const qDiv=document.createElement('div'); qDiv.className='question';
+      let opts='';
+      for(let o=0;o<numOptions;o++){
+        const letter=String.fromCharCode(65+o);
+        opts+=`<span class="opt" data-q="${q}" data-opt="${letter}">${letter}</span>`;
+      }
+      qDiv.innerHTML=`${q}. ${opts}`;
+      page.appendChild(qDiv);
+    }
+    container.appendChild(page);
+  }
+}
+
+document.getElementById('fileInput').addEventListener('change',function(e){
+  const files=e.target.files;
+  for(let f of files){
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      const data=new Uint8Array(ev.target.result);
+      const workbook=XLSX.read(data,{type:'array'});
+      workbook.SheetNames.forEach(sheetName=>{
+        const sheet=workbook.Sheets[sheetName];
+        const json=XLSX.utils.sheet_to_json(sheet);
+        studentsData[sheetName]=json.map(r=>({numero:r['Nº'],nome:r['Nome']}));
+      });
+      updateClassOptions();
+    };
+    reader.readAsArrayBuffer(f);
+  }
+});
+
+function updateClassOptions(){
+  const selectClass=document.getElementById('selectClass');
+  selectClass.innerHTML='<option value="">-- Selecione --</option>';
+  Object.keys(studentsData).forEach(c=>{
+    const opt=document.createElement('option'); opt.value=c; opt.textContent=c;
+    selectClass.appendChild(opt);
+  });
+  document.getElementById('selectStudent').innerHTML='<option value="">-- Selecione --</option>';
+  document.getElementById('studentNumber').value='';
+}
+
+document.getElementById('selectClass').addEventListener('change',function(){
+  const turma=this.value;
+  const selectStudent=document.getElementById('selectStudent');
+  selectStudent.innerHTML='<option value="">-- Selecione --</option>';
+  if(studentsData[turma]){
+    studentsData[turma].forEach(s=>{
+      const opt=document.createElement('option'); opt.value=s.nome; opt.textContent=s.nome; opt.dataset.numero=s.numero??'';
+      selectStudent.appendChild(opt);
+    });
+  }
+  document.getElementById('studentNumber').value='';
+});
+
+document.getElementById('selectStudent').addEventListener('change',function(){
+  const numero=this.selectedOptions[0]?.dataset?.numero||'';
+  document.getElementById('studentNumber').value=numero;
+});
+
+function exportResults(){
+  if(results.length===0){ alert("Nenhum resultado registrado ainda."); return; }
+  const ws=XLSX.utils.json_to_sheet(results);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Resultados");
+  XLSX.writeFile(wb,"Resultados.xlsx");
+}
+
+function printSheet(){ window.print(); }
+
+const videoEl=document.getElementById('videoElement');
+const overlay=document.getElementById('overlayCanvas');
+const startBtn=document.getElementById('startCamBtn');
+const stopBtn=document.getElementById('stopCamBtn');
+const captureBtn=document.getElementById('captureBtn');
+const autoScanCheckbox=document.getElementById('autoScan');
+const resultsList=document.getElementById('resultsList');
+
+let stream=null, autoScanInterval=null;
+
+const boxX=document.getElementById('boxX');
+const boxY=document.getElementById('boxY');
+const boxW=document.getElementById('boxW');
+const boxH=document.getElementById('boxH');
+const threshSlider=document.getElementById('threshSlider');
+const threshVal=document.getElementById('threshVal');
+
+threshSlider.addEventListener('input',()=>{threshVal.textContent=threshSlider.value;});
+
+async function startCamera(){
+  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:"environment"}},audio:false}); }
+  catch(err){ try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); }
+  catch(err2){ alert("Não foi possível iniciar a câmera."); return; } }
+  videoEl.srcObject=stream;
+  startBtn.disabled=true; stopBtn.disabled=false; captureBtn.disabled=false;
+  overlay.width=videoEl.clientWidth; overlay.height=videoEl.clientHeight;
+  drawOverlay();
+}
+
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  startBtn.disabled=false; stopBtn.disabled=true; captureBtn.disabled=true;
+  clearOverlay();
+  clearInterval(autoScanInterval);
+}
+
+function drawOverlay(){
+  const ctx=overlay.getContext('2d');
+  function loop(){
+    if(!stream){ clearOverlay(); return; }
+    ctx.clearRect(0,0,overlay.width,overlay.height);
+    ctx.strokeStyle='red'; ctx.lineWidth=2;
+    const x=overlay.width*boxX.value/100;
+    const y=overlay.height*boxY.value/100;
+    const w=overlay.width*boxW.value/100;
+    const h=overlay.height*boxH.value/100;
+    ctx.strokeRect(x,y,w,h);
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function clearOverlay(){ const ctx=overlay.getContext('2d'); ctx.clearRect(0,0,overlay.width,overlay.height); }
+
+captureBtn.addEventListener('click',()=>{ captureScan(); });
+startBtn.addEventListener('click',()=>{ startCamera(); });
+stopBtn.addEventListener('click',()=>{ stopCamera(); });
+
+function captureScan(){
+  if(!videoEl.videoWidth)return;
+  const tempCanvas=document.createElement('canvas');
+  tempCanvas.width=videoEl.videoWidth; tempCanvas.height=videoEl.videoHeight;
+  const ctx=tempCanvas.getContext('2d');
+  ctx.drawImage(videoEl,0,0);
+  // Aqui se processaria o OCR ou análise das bolhas, por enquanto só captura
+  const dataUrl=tempCanvas.toDataURL();
+  results.unshift({timestamp:new Date().toLocaleString(),image:dataUrl});
+  if(results.length>20)results.pop();
+  updateResultsList();
+}
+
+function updateResultsList(){
+  resultsList.innerHTML='';
+  results.forEach(r=>{
+    const div=document.createElement('div');
+    div.innerHTML=`<strong>${r.timestamp}</strong> &nbsp; <a href="${r.image}" target="_blank">Ver imagem</a>`;
+    resultsList.appendChild(div);
+  });
+}
+
+updateSheet();
+</script>
+</body>
+</html>
